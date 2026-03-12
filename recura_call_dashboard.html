@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recura — Call Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+ --bg: #0d1520; --surface: #101c2e; --surface2: #142034; --surface3: #1a2840;
+ --border: #1e2e44; --border2: #253650; --text: #e8eef8; --muted: #405070; --muted2: #7a90b0;
+ --accent: #3b8af0; --accent-dim: #0d1f3c;
+ --blue: #3b8af0; --blue-dim: #0d1f3c;
+ --orange: #f0a060; --orange-dim: #2a1a08;
+ --red: #f07070; --red-dim: #2a1414;
+ --purple: #a080e0; --purple-dim: #1a1430;
+ --yellow: #f0c844; --yellow-dim: #2a2008;
+ --in-color: #3b8af0; --out-color: #a080e0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; line-height: 1.5; }
+
+.topbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 0; position: sticky; top: 0; z-index: 100; }
+.topbar-brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; margin-right: 0; }
+.topbar-brand em { color: var(--accent); font-style: normal; }
+.topbar-sep { width: 1px; height: 20px; background: var(--border2); margin: 0 16px; }
+.main-tabs { display: flex; gap: 2px; }
+.main-tab { padding: 6px 16px; font-size: 11px; font-weight: 500; border-radius: 5px; cursor: pointer; color: var(--muted); transition: all 0.13s; display: flex; align-items: center; gap: 7px; border: 1px solid transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
+.main-tab:hover { color: var(--sub); background: var(--surface2); }
+.main-tab.active.inbound { color: var(--in-color); background: rgba(59,138,240,0.08); border-color: rgba(59,138,240,0.2); }
+.main-tab.active.outbound { color: var(--out-color); background: rgba(160,128,224,0.08); border-color: rgba(160,128,224,0.2); }
+.tab-dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-in { background: var(--in-color); } .dot-out { background: var(--out-color); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.clinic-chip { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; }
+.clinic-av { width: 24px; height: 24px; border-radius: 5px; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+.pselect { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted2); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; outline: none; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.section { border-bottom: 1px solid var(--border); padding: 24px 28px; }
+.section:last-child { border-bottom: none; }
+.sec-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+.sec-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight:700; font-size: 13px; font-weight: 600; }
+.sec-sub { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* chart */
+.chart-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+.chart-kpis { display: flex; gap: 28px; margin-bottom: 16px; flex-wrap: wrap; }
+.kpi-val { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -0.8px; }
+.kpi-lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.kpi-d { font-size: 10px; font-family: 'DM Mono', monospace; margin-top: 2px; }
+.up { color: var(--accent); } .dn { color: var(--red); }
+.leg { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+.leg-i { display: flex; align-items: center; gap: 6px; font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted2); }
+.leg-l { width: 18px; height: 2px; border-radius: 1px; }
+svg.lc { width: 100%; height: 150px; display: block; }
+.xax { display: flex; justify-content: space-between; padding: 6px 0 0; font-size: 9px; font-family: 'DM Mono', monospace; color: var(--muted); }
+
+/* outbound chips */
+.ob-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 52px; z-index: 80; }
+.ob-lbl { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); white-space: nowrap; }
+.ob-chip { display: flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid var(--border2); color: var(--muted2); background: var(--surface2); transition: all 0.15s; user-select: none; white-space: nowrap; }
+.ob-chip:hover { border-color: var(--out-color); color: var(--out-color); }
+.ob-chip.sel { background: var(--purple-dim); border-color: rgba(192,144,240,0.4); color: var(--out-color); font-weight: 500; }
+.ob-cdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* flow */
+.flow-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.flow-hint { padding: 9px 16px; background: var(--surface3); border-bottom: 1px solid var(--border); font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 8px; }
+.fhd { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.flow-scroll { overflow-x: auto; overflow-y: hidden; padding: 24px 20px; }
+
+.fn { border-radius: 7px; padding: 9px 13px; cursor: pointer; border: 1px solid transparent; transition: all 0.18s; position: absolute; }
+.fn:hover { filter: brightness(1.15); }
+.fn.sel { outline: 2px solid rgba(255,255,255,0.7); outline-offset: 2px; }
+.fn-count { font-size: 16px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -0.5px; line-height: 1; }
+.fn-lbl { font-size: 10px; margin-top: 3px; opacity: 0.85; line-height: 1.3; }
+.fn-pct { font-size: 9px; font-family: 'DM Mono', monospace; opacity: 0.55; margin-top: 2px; }
+.np { background: var(--blue-dim); border-color: rgba(96,180,240,0.25); color: var(--blue); }
+.ns { background: var(--accent-dim); border-color: rgba(126,232,162,0.25); color: var(--accent); }
+.nw { background: var(--orange-dim); border-color: rgba(240,160,96,0.25); color: var(--orange); }
+.nd { background: var(--red-dim); border-color: rgba(240,112,112,0.25); color: var(--red); }
+.nn { background: var(--surface3); border-color: var(--border2); color: var(--muted2); }
+.npu { background: var(--purple-dim); border-color: rgba(192,144,240,0.25); color: var(--purple); }
+.ny { background: var(--yellow-dim); border-color: rgba(240,208,96,0.25); color: var(--yellow); }
+
+/* gate */
+.gate { margin: 20px 28px; padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; font-size: 12px; color: var(--muted2); display: flex; align-items: center; gap: 10px; }
+.gate.hidden { display: none; }
+
+/* call log */
+.cl-hdr { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+.cl-seg { font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.seg-pill { font-size: 10px; font-family: 'DM Mono', monospace; padding: 3px 10px; border-radius: 20px; background: var(--blue-dim); color: var(--in-color); border: 1px solid rgba(96,180,240,0.2); }
+.seg-pill.ob { background: var(--purple-dim); color: var(--out-color); border-color: rgba(192,144,240,0.2); }
+.csearch { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; width: 200px; }
+.csearch::placeholder { color: var(--muted); }
+.ct-hdr { display: grid; grid-template-columns: 1fr 110px 70px 60px 110px 100px; padding: 8px 18px; border-bottom: 1px solid var(--border); font-size: 9px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.cr { display: grid; grid-template-columns: 1fr 110px 70px 60px 110px 100px; padding: 11px 18px; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.12s; cursor: pointer; }
+.cr:last-child { border-bottom: none; }
+.cr:hover { background: rgba(255,255,255,0.025); }
+.cr.playing { background: var(--blue-dim); }
+.cn { font-size: 12px; font-weight: 500; }
+.cm { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; margin-top: 1px; }
+.cf { font-size: 9px; color: var(--orange); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.op { font-size: 9px; font-family: 'DM Mono', monospace; padding: 3px 8px; border-radius: 3px; white-space: nowrap; display: inline-block; }
+.op-b { background: var(--accent-dim); color: var(--accent); }
+.op-c { background: var(--red-dim); color: var(--red); }
+.op-r { background: var(--orange-dim); color: var(--orange); }
+.op-e { background: var(--purple-dim); color: var(--purple); }
+.op-i { background: var(--surface3); color: var(--muted2); }
+.op-v { background: var(--yellow-dim); color: var(--yellow); }
+.pbtn { width: 28px; height: 28px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; transition: all 0.15s; flex-shrink: 0; }
+.pbtn:hover { background: var(--blue-dim); border-color: rgba(96,180,240,0.3); }
+.pbtn.act { background: var(--in-color); color: #000; border-color: var(--in-color); }
+.wf { display: flex; align-items: center; gap: 1.5px; height: 16px; }
+.wb { width: 2px; border-radius: 1px; background: var(--border2); }
+.wb.lit { background: var(--in-color); }
+.empty { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* audio modal */
+.amod { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 14px 20px; display: none; align-items: center; gap: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.7); z-index: 300; min-width: 500px; }
+.amod.vis { display: flex; }
+.ai { flex: 1; min-width: 0; }
+.an { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; }
+.apbtn { width: 34px; height: 34px; border-radius: 50%; background: var(--in-color); border: none; color: #000; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.apw { flex: 1; min-width: 140px; }
+.apb { height: 3px; background: var(--border2); border-radius: 2px; cursor: pointer; }
+.apf { height: 100%; background: var(--in-color); border-radius: 2px; width: 0%; transition: width 0.1s; }
+.apt { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted2); margin-top: 4px; }
+.acl { color: var(--muted); cursor: pointer; padding: 4px; font-size: 16px; }
+.acl:hover { color: var(--text); }
+.tbtn { font-size: 9px; font-family: 'DM Mono', monospace; padding: 4px 10px; border-radius: 4px; background: var(--surface3); color: var(--muted2); cursor: pointer; border: 1px solid var(--border2); white-space: nowrap; }
+.tbtn:hover { color: var(--in-color); border-color: var(--in-color); }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+ <div class="topbar-brand" style="margin-right:16px">Recura</div>
+ <div class="main-tabs">
+ <div class="main-tab inbound active" onclick="switchTab('inbound',this)"><div class="tab-dot dot-in"></div>Inbound</div>
+ <div class="main-tab outbound" onclick="switchTab('outbound',this)"><div class="tab-dot dot-out"></div>Outbound</div>
+ </div>
+ <div class="topbar-right">
+ <div class="clinic-chip"><div class="clinic-av">BW</div>Blue Wave Wellness</div>
+ <div class="topbar-sep"></div>
+ <select class="pselect" id="period-sel" onchange="redraw(this.value)"><option value="365">Last 1 year</option><option value="180">Last 180 days</option><option value="90" selected>Last 90 days</option><option value="30">Last 30 days</option><option value="7">Last 7 days</option></select>
+ </div>
+</div>
+
+<!-- ═══════ INBOUND ═══════ -->
+<div id="tab-inbound" class="tab-content active">
+ <div class="section">
+ <div class="sec-hdr"><div><div class="sec-title">Inbound Call Volume</div><div class="sec-sub" id="in-sub">Daily trend · last 90 days</div></div></div>
+ <div class="chart-wrap">
+ <div class="chart-kpis">
+ <div><div class="kpi-val" style="color:var(--in-color)" id="in-kpi-total">938</div><div class="kpi-lbl">Total inbound calls</div><div class="kpi-d up" id="in-kpi-total-d">↑ 18% vs prev</div></div>
+ <div><div class="kpi-val" style="color:var(--accent)" id="in-kpi-booked">561</div><div class="kpi-lbl">Appointments booked</div><div class="kpi-d up" id="in-kpi-booked-d">↑ 12% vs prev</div></div>
+ <div><div class="kpi-val" style="color:var(--muted2)" id="in-kpi-rate">59.8%</div><div class="kpi-lbl">Call → booking rate</div><div class="kpi-d up" id="in-kpi-rate-d">↑ 3.1 pts</div></div>
+ </div>
+ <div class="leg">
+ <div class="leg-i"><div class="leg-l" style="background:var(--in-color)"></div>Total inbound</div>
+ <div class="leg-i"><div class="leg-l" style="background:var(--accent)"></div>Booked</div>
+ </div>
+ <svg class="lc" id="in-svg" viewBox="0 0 900 140" preserveAspectRatio="none">
+ <defs>
+ <linearGradient id="gI" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60b4f0" stop-opacity="0.18"/><stop offset="100%" stop-color="#60b4f0" stop-opacity="0"/></linearGradient>
+ <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7ee8a2" stop-opacity="0.14"/><stop offset="100%" stop-color="#7ee8a2" stop-opacity="0"/></linearGradient>
+ </defs>
+ <line x1="0" y1="36" x2="900" y2="36" stroke="#1e1e22" stroke-width="1"/>
+ <line x1="0" y1="72" x2="900" y2="72" stroke="#1e1e22" stroke-width="1"/>
+ <line x1="0" y1="108" x2="900" y2="108" stroke="#1e1e22" stroke-width="1"/>
+ <path id="in-a" fill="url(#gI)"/><path id="bk-a" fill="url(#gB)"/>
+ <path id="in-l" fill="none" stroke="#60b4f0" stroke-width="2" stroke-linejoin="round"/>
+ <path id="bk-l" fill="none" stroke="#7ee8a2" stroke-width="1.5" stroke-linejoin="round"/>
+ </svg>
+ <div class="xax" id="in-x"></div>
+ </div>
+ </div>
+
+ <div class="section">
+ <div class="sec-hdr">
+ <div><div class="sec-title">Call Flow — All Outcomes</div><div class="sec-sub">Every branch enumerated · click a node to filter call recordings below</div></div>
+ <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">938 calls · last 90 days</div>
+ </div>
+ <div class="flow-wrap">
+ <div class="flow-hint"><div class="fhd"></div>Green = converted · Orange = recoverable · Red = lost · Purple = escalated · Node width = relative volume</div>
+ <div class="flow-scroll"><div id="in-flow" style="position:relative"></div></div>
+ </div>
+ </div>
+
+ <div class="section" style="padding:0">
+ <div class="cl-hdr">
+ <div class="cl-seg">Call Recordings — <span class="seg-pill" id="in-seg">All calls</span><span id="in-call-count" style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-left:4px"></span></div>
+ <div style="display:flex;gap:8px;align-items:center">
+ <input class="csearch" placeholder="Search name or ID…" oninput="flog('in',this.value)">
+ <select class="pselect" style="font-size:11px"><option>Newest first</option><option>Oldest first</option></select>
+ </div>
+ </div>
+ <div class="ct-hdr"><div>Patient</div><div>Date</div><div>Duration</div><div>Score</div><div>Outcome</div><div style="text-align:right">Recording</div></div>
+ <div id="in-rows"></div>
+ </div>
+</div>
+
+<!-- ═══════ OUTBOUND ═══════ -->
+<div id="tab-outbound" class="tab-content">
+ <div class="ob-bar">
+ <span class="ob-lbl">User group :</span>
+ <div class="ob-chip sel" data-g="all"><div class="ob-cdot" style="background:var(--out-color)"></div>All outbound</div>
+ <div class="ob-chip" data-g="botox-first"><div class="ob-cdot" style="background:#f0c060"></div>Botox · 1st session done</div>
+ <div class="ob-chip" data-g="inactive-60"><div class="ob-cdot" style="background:var(--orange)"></div>Inactive 60+ days</div>
+ <div class="ob-chip" data-g="no-show"><div class="ob-cdot" style="background:var(--red)"></div>No-show recovery</div>
+ <div class="ob-chip" data-g="referral"><div class="ob-cdot" style="background:var(--accent)"></div>Referral leads</div>
+ </div>
+
+ <div class="section">
+ <div class="sec-hdr"><div><div class="sec-title">Outbound Performance</div><div class="sec-sub" id="ob-sub">All outbound · last 90 days</div></div></div>
+ <div class="chart-wrap">
+ <div class="chart-kpis" id="ob-kpis">
+ <div><div class="kpi-val" style="color:var(--out-color)" id="ob-kpi-placed">412</div><div class="kpi-lbl">Calls placed</div><div class="kpi-d up" id="ob-kpi-placed-d">↑ 9%</div></div>
+ <div><div class="kpi-val" style="color:var(--orange)" id="ob-kpi-leads">198</div><div class="kpi-lbl">Leads reached</div><div class="kpi-d up" id="ob-kpi-leads-d">↑ 14%</div></div>
+ <div><div class="kpi-val" style="color:var(--accent)" id="ob-kpi-booked">89</div><div class="kpi-lbl">Appointments booked</div><div class="kpi-d up" id="ob-kpi-booked-d">↑ 22%</div></div>
+ <div><div class="kpi-val" style="color:var(--muted2)" id="ob-kpi-rate">21.6%</div><div class="kpi-lbl">Call → booking rate</div><div class="kpi-d dn" id="ob-kpi-rate-d">↓ 1.2 pts</div></div>
+ <div><div class="kpi-val" style="color:var(--yellow)" id="ob-kpi-rev">$8,455</div><div class="kpi-lbl">Est. revenue from outbound</div><div class="kpi-d up" id="ob-kpi-rev-d">↑ 19% vs prev</div></div>
+ </div>
+ <div class="leg">
+ <div class="leg-i"><div class="leg-l" style="background:var(--out-color)"></div>Calls placed</div>
+ <div class="leg-i"><div class="leg-l" style="background:var(--orange)"></div>Leads reached</div>
+ <div class="leg-i"><div class="leg-l" style="background:var(--accent)"></div>Booked</div>
+ <div class="leg-i"><div class="leg-l" style="background:var(--yellow);border-top:2px dashed var(--yellow);background:none;height:0;margin-top:5px"></div>Est. revenue</div>
+ </div>
+ <svg class="lc" id="ob-svg" viewBox="0 0 900 140" preserveAspectRatio="none">
+ <defs>
+ <linearGradient id="gO" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c090f0" stop-opacity="0.15"/><stop offset="100%" stop-color="#c090f0" stop-opacity="0"/></linearGradient>
+ <linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0a060" stop-opacity="0.12"/><stop offset="100%" stop-color="#f0a060" stop-opacity="0"/></linearGradient>
+ </defs>
+ <line x1="0" y1="36" x2="900" y2="36" stroke="#1e1e22" stroke-width="1"/>
+ <line x1="0" y1="72" x2="900" y2="72" stroke="#1e1e22" stroke-width="1"/>
+ <line x1="0" y1="108" x2="900" y2="108" stroke="#1e1e22" stroke-width="1"/>
+ <path id="ob-ao" fill="url(#gO)"/><path id="ob-al" fill="url(#gL)"/>
+ <path id="ob-lo" fill="none" stroke="#c090f0" stroke-width="2" stroke-linejoin="round"/>
+ <path id="ob-ll" fill="none" stroke="#f0a060" stroke-width="1.5" stroke-linejoin="round"/>
+ <path id="ob-lb" fill="none" stroke="#7ee8a2" stroke-width="1.5" stroke-linejoin="round"/>
+ <path id="ob-lr" fill="none" stroke="#f0d060" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="5,3"/>
+ </svg>
+ <div class="xax" id="ob-x"></div>
+ </div>
+ </div>
+
+ <div class="section">
+ <div class="sec-hdr"><div><div class="sec-title">Outbound Call Flow</div><div class="sec-sub">Select a user group above to view campaign breakdown · click node to filter recordings</div></div></div>
+ <div id="ob-gate" class="gate"><span style="font-size:16px">️</span>Select a specific user group above to see outbound call flow for that campaign.</div>
+ <div id="ob-fwrap" style="display:none">
+ <div class="flow-wrap">
+ <div class="flow-hint"><div class="fhd" style="background:var(--out-color)"></div>Click any node to filter call recordings below</div>
+ <div class="flow-scroll"><div id="ob-flow" style="position:relative"></div></div>
+ </div>
+ </div>
+ </div>
+
+ <div class="section" style="padding:0">
+ <div class="cl-hdr">
+ <div class="cl-seg">Call Recordings — <span class="seg-pill ob" id="ob-seg">All outbound</span><span id="ob-call-count" style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-left:4px"></span></div>
+ <div style="display:flex;gap:8px;align-items:center">
+ <input class="csearch" placeholder="Search name or ID…" oninput="flog('ob',this.value)">
+ <select class="pselect" style="font-size:11px"><option>Newest first</option><option>Oldest first</option></select>
+ </div>
+ </div>
+ <div class="ct-hdr"><div>Patient</div><div>Date</div><div>Duration</div><div>Score</div><div>Outcome</div><div style="text-align:right">Recording</div></div>
+ <div id="ob-rows"></div>
+ </div>
+</div>
+
+<!-- audio modal -->
+<div class="amod" id="amod">
+ <div class="ai"><div class="an" id="an">—</div><div class="am" id="am">—</div></div>
+ <button class="apbtn" id="apbtn" onclick="togglePlay()">▶</button>
+ <div class="apw">
+ <div class="apb" onclick="seekA(event,this)"><div class="apf" id="apf"></div></div>
+ <div class="apt" id="apt">0:00 / 0:00</div>
+ </div>
+ <div class="tbtn" onclick="showTx()">Transcript</div>
+ <div class="acl" onclick="closeA()"></div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────
+const IN_FLOW = {
+ nodes:[
+ {id:'root',col:0,lbl:'Inbound call\nreceived',n:938,pct:'100%',cls:'np'},
+ {id:'ans',col:1,lbl:'AI answered',n:882,pct:'94%',cls:'np'},
+ {id:'miss',col:1,lbl:'Missed / not\nanswered',n:56,pct:'6%',cls:'nd'},
+ {id:'iok',col:2,lbl:'Intent understood',n:741,pct:'84% of answered',cls:'np'},
+ {id:'ifail',col:2,lbl:'Intent unclear\n(AI confused)',n:88,pct:'10% of answered',cls:'nw'},
+ {id:'hearly',col:2,lbl:'Hung up early\n(<10 sec)',n:53,pct:'6% of answered',cls:'nd'},
+ {id:'batt',col:3,lbl:'Booking attempted',n:612,pct:'83% of understood',cls:'np'},
+ {id:'resch',col:3,lbl:'Rescheduled\nexisting appt.',n:84,pct:'11%',cls:'nw'},
+ {id:'canc',col:3,lbl:'Cancelled\nappointment',n:24,pct:'3%',cls:'nd'},
+ {id:'inq',col:3,lbl:'General inquiry\n(hours/price/etc.)',n:21,pct:'3%',cls:'nn'},
+ {id:'esc',col:3,lbl:'Escalated\nto staff',n:88,pct:'100% of confused',cls:'npu'},
+ {id:'bkd',col:4,lbl:' Booking confirmed',n:561,pct:'92% of attempted',cls:'ns'},
+ {id:'nosl',col:4,lbl:'No slot matched\n(patient left)',n:35,pct:'6%',cls:'nd'},
+ {id:'abrt',col:4,lbl:'Patient changed mind\nmid-booking',n:16,pct:'3%',cls:'nw'},
+ ],
+ edges:[
+ {f:'root',t:'ans',w:882,c:'#60b4f0'},{f:'root',t:'miss',w:56,c:'#f07070'},
+ {f:'ans',t:'iok',w:741,c:'#60b4f0'},{f:'ans',t:'ifail',w:88,c:'#f0a060'},{f:'ans',t:'hearly',w:53,c:'#f07070'},
+ {f:'iok',t:'batt',w:612,c:'#60b4f0'},{f:'iok',t:'resch',w:84,c:'#f0a060'},{f:'iok',t:'canc',w:24,c:'#f07070'},{f:'iok',t:'inq',w:21,c:'#8a8a94'},
+ {f:'ifail',t:'esc',w:88,c:'#c090f0'},
+ {f:'batt',t:'bkd',w:561,c:'#7ee8a2'},{f:'batt',t:'nosl',w:35,c:'#f07070'},{f:'batt',t:'abrt',w:16,c:'#f0a060'},
+ ]
+};
+
+const OB_FLOWS = {
+ 'botox-first':{nodes:[
+ {id:'root',col:0,lbl:'Outbound placed\n(Post-Botox)',n:88,pct:'100%',cls:'npu'},
+ {id:'ans',col:1,lbl:'Call answered',n:61,pct:'69%',cls:'np'},
+ {id:'vm',col:1,lbl:'Voicemail left',n:18,pct:'20%',cls:'ny'},
+ {id:'na',col:1,lbl:'No answer',n:9,pct:'10%',cls:'nd'},
+ {id:'eng',col:2,lbl:'Patient engaged\n(>15 sec)',n:50,pct:'82%',cls:'np'},
+ {id:'ref',col:2,lbl:'Not interested\n/ hung up',n:11,pct:'18%',cls:'nd'},
+ {id:'bkd',col:3,lbl:' Appointment\nconfirmed',n:28,pct:'56%',cls:'ns'},
+ {id:'cb',col:3,lbl:'Requested\ncallback later',n:12,pct:'24%',cls:'nw'},
+ {id:'dec',col:3,lbl:'Declined after\ndiscussion',n:10,pct:'20%',cls:'nd'},
+ ],edges:[
+ {f:'root',t:'ans',w:61,c:'#c090f0'},{f:'root',t:'vm',w:18,c:'#f0d060'},{f:'root',t:'na',w:9,c:'#f07070'},
+ {f:'ans',t:'eng',w:50,c:'#60b4f0'},{f:'ans',t:'ref',w:11,c:'#f07070'},
+ {f:'eng',t:'bkd',w:28,c:'#7ee8a2'},{f:'eng',t:'cb',w:12,c:'#f0a060'},{f:'eng',t:'dec',w:10,c:'#f07070'},
+ ]},
+ 'inactive-60':{nodes:[
+ {id:'root',col:0,lbl:'Outbound placed\n(Inactive 60+ days)',n:142,pct:'100%',cls:'npu'},
+ {id:'ans',col:1,lbl:'Call answered',n:74,pct:'52%',cls:'nw'},
+ {id:'vm',col:1,lbl:'Voicemail left',n:42,pct:'30%',cls:'ny'},
+ {id:'na',col:1,lbl:'No answer',n:26,pct:'18%',cls:'nd'},
+ {id:'eng',col:2,lbl:'Patient engaged\n(>15 sec)',n:48,pct:'65%',cls:'np'},
+ {id:'ref',col:2,lbl:'Cold response\n/ hung up',n:26,pct:'35%',cls:'nd'},
+ {id:'bkd',col:3,lbl:' Appointment\nconfirmed',n:14,pct:'29%',cls:'ns'},
+ {id:'int',col:3,lbl:'Interested —\nneeds time',n:19,pct:'40%',cls:'nw'},
+ {id:'dec',col:3,lbl:'Declined\noutright',n:15,pct:'31%',cls:'nd'},
+ ],edges:[
+ {f:'root',t:'ans',w:74,c:'#c090f0'},{f:'root',t:'vm',w:42,c:'#f0d060'},{f:'root',t:'na',w:26,c:'#f07070'},
+ {f:'ans',t:'eng',w:48,c:'#60b4f0'},{f:'ans',t:'ref',w:26,c:'#f07070'},
+ {f:'eng',t:'bkd',w:14,c:'#7ee8a2'},{f:'eng',t:'int',w:19,c:'#f0a060'},{f:'eng',t:'dec',w:15,c:'#f07070'},
+ ]},
+ 'no-show':{nodes:[
+ {id:'root',col:0,lbl:'No-show\ndetected',n:78,pct:'100%',cls:'nd'},
+ {id:'sms',col:1,lbl:'Recovery SMS\nsent (auto <2h)',n:78,pct:'100%',cls:'np'},
+ {id:'rep',col:2,lbl:'SMS replied /\nlink tapped',n:41,pct:'53%',cls:'np'},
+ {id:'ign',col:2,lbl:'SMS ignored',n:37,pct:'47%',cls:'nw'},
+ {id:'call',col:3,lbl:'Recovery call\nplaced by AI',n:35,pct:'45%',cls:'npu'},
+ {id:'rbk',col:4,lbl:' Rebooked',n:14,pct:'18%',cls:'ns'},
+ {id:'lost',col:4,lbl:'Not recovered\n(lost)',n:64,pct:'82%',cls:'nd'},
+ ],edges:[
+ {f:'root',t:'sms',w:78,c:'#f07070'},
+ {f:'sms',t:'rep',w:41,c:'#60b4f0'},{f:'sms',t:'ign',w:37,c:'#f0a060'},
+ {f:'rep',t:'call',w:35,c:'#c090f0'},{f:'rep',t:'rbk',w:6,c:'#7ee8a2'},
+ {f:'call',t:'rbk',w:14,c:'#7ee8a2'},{f:'call',t:'lost',w:21,c:'#f07070'},
+ {f:'ign',t:'lost',w:37,c:'#f07070'},
+ ]},
+ 'referral':{nodes:[
+ {id:'root',col:0,lbl:'Referral lead\ncreated',n:104,pct:'100%',cls:'ns'},
+ {id:'dialed',col:1,lbl:'AI dials\n(within 5 min)',n:97,pct:'93%',cls:'np'},
+ {id:'miss',col:1,lbl:'Not dialed\n(data missing)',n:7,pct:'7%',cls:'nn'},
+ {id:'ans',col:2,lbl:'Lead answered',n:71,pct:'73%',cls:'np'},
+ {id:'na',col:2,lbl:'No answer /\nvoicemail',n:26,pct:'27%',cls:'nw'},
+ {id:'bkd',col:3,lbl:' Appointment\nconfirmed',n:38,pct:'54%',cls:'ns'},
+ {id:'warm',col:3,lbl:'Warm lead —\nwill book later',n:24,pct:'34%',cls:'nw'},
+ {id:'dec',col:3,lbl:'Not interested',n:9,pct:'13%',cls:'nd'},
+ ],edges:[
+ {f:'root',t:'dialed',w:97,c:'#7ee8a2'},{f:'root',t:'miss',w:7,c:'#8a8a94'},
+ {f:'dialed',t:'ans',w:71,c:'#60b4f0'},{f:'dialed',t:'na',w:26,c:'#f0a060'},
+ {f:'ans',t:'bkd',w:38,c:'#7ee8a2'},{f:'ans',t:'warm',w:24,c:'#f0a060'},{f:'ans',t:'dec',w:9,c:'#f07070'},
+ ]},
+};
+
+const IN_CALLS = {
+ all:[
+ {id:'#IB-1042',nm:'Sarah Miller',tp:'New patient',dt:'Today 14:23',du:'1:04',sc:98,oc:'booked'},
+ {id:'#IB-1041',nm:'James Torres',tp:'Returning',dt:'Today 11:08',du:'0:38',sc:72,oc:'escalated'},
+ {id:'#IB-1040',nm:'David Kim',tp:'Returning',dt:'Today 10:15',du:'2:11',sc:61,oc:'rescheduled'},
+ {id:'#IB-1039',nm:'Linda Ramirez',tp:'New patient',dt:'Yesterday 16:50',du:'1:28',sc:94,oc:'booked'},
+ {id:'#IB-1038',nm:'Mark Wilson',tp:'Returning',dt:'Yesterday 15:30',du:'0:22',sc:80,oc:'cancelled'},
+ {id:'#IB-1037',nm:'Priya Sharma',tp:'Returning',dt:'Yesterday 13:12',du:'0:51',sc:88,oc:'booked'},
+ {id:'#IB-1036',nm:'Tom Chen',tp:'New patient',dt:'Yesterday 10:44',du:'3:02',sc:45,oc:'escalated'},
+ {id:'#IB-1035',nm:'Angela Brooks',tp:'New patient',dt:'Dec 8 09:30',du:'1:17',sc:91,oc:'booked'},
+ {id:'#IB-1034',nm:'Ryan Park',tp:'Returning',dt:'Dec 8 08:55',du:'0:29',sc:77,oc:'inquiry'},
+ {id:'#IB-1033',nm:'Mei Zhang',tp:'Returning',dt:'Dec 7 17:20',du:'1:45',sc:83,oc:'rescheduled'},
+ ],
+ ifail:[
+ {id:'#IB-1036',nm:'Tom Chen',tp:'New patient',dt:'Yesterday 10:44',du:'3:02',sc:45,oc:'escalated',fl:' AI confused — review for bad case'},
+ {id:'#IB-1029',nm:'Kevin Wu',tp:'New patient',dt:'Dec 5 11:20',du:'1:48',sc:38,oc:'escalated',fl:' Unclear intent — possible misrouting'},
+ {id:'#IB-1024',nm:'Fiona Lee',tp:'New patient',dt:'Dec 3 15:05',du:'2:33',sc:31,oc:'escalated',fl:' AI looped 3× before escalating'},
+ ],
+ hearly:[
+ {id:'#IB-1050',nm:'Unknown caller',tp:'Unknown',dt:'Today 08:44',du:'0:07',sc:0,oc:'inquiry',fl:'Hung up at greeting — possible AI distrust'},
+ {id:'#IB-1048',nm:'Unknown caller',tp:'Unknown',dt:'Yesterday 17:02',du:'0:04',sc:0,oc:'inquiry',fl:'Hung up at greeting (<10s)'},
+ {id:'#IB-1043',nm:'Patrick Yee',tp:'New patient',dt:'Today 13:50',du:'0:09',sc:12,oc:'inquiry',fl:' Hung up 9s after AI intro'},
+ ],
+ nosl:[
+ {id:'#IB-1044',nm:'Derek Chan',tp:'New patient',dt:'Today 09:10',du:'0:58',sc:74,oc:'inquiry',fl:' Wanted Tue AM — no slot — left without booking'},
+ {id:'#IB-1030',nm:'Maria Lopez',tp:'Returning',dt:'Dec 6 14:30',du:'1:12',sc:70,oc:'inquiry',fl:' No matching slot — consider expanding hours'},
+ ],
+ bkd:[
+ {id:'#IB-1042',nm:'Sarah Miller',tp:'New patient',dt:'Today 14:23',du:'1:04',sc:98,oc:'booked'},
+ {id:'#IB-1039',nm:'Linda Ramirez',tp:'New patient',dt:'Yesterday 16:50',du:'1:28',sc:94,oc:'booked'},
+ {id:'#IB-1037',nm:'Priya Sharma',tp:'Returning',dt:'Yesterday 13:12',du:'0:51',sc:88,oc:'booked'},
+ {id:'#IB-1035',nm:'Angela Brooks',tp:'New patient',dt:'Dec 8 09:30',du:'1:17',sc:91,oc:'booked'},
+ ],
+ esc:[
+ {id:'#IB-1041',nm:'James Torres',tp:'Returning',dt:'Today 11:08',du:'0:38',sc:72,oc:'escalated'},
+ {id:'#IB-1036',nm:'Tom Chen',tp:'New patient',dt:'Yesterday 10:44',du:'3:02',sc:45,oc:'escalated',fl:' AI confused — review for bad case'},
+ ],
+ resch:[
+ {id:'#IB-1040',nm:'David Kim',tp:'Returning',dt:'Today 10:15',du:'2:11',sc:61,oc:'rescheduled'},
+ {id:'#IB-1033',nm:'Mei Zhang',tp:'Returning',dt:'Dec 7 17:20',du:'1:45',sc:83,oc:'rescheduled'},
+ ],
+ canc:[{id:'#IB-1038',nm:'Mark Wilson',tp:'Returning',dt:'Yesterday 15:30',du:'0:22',sc:80,oc:'cancelled'}],
+};
+const IN_NODE_MAP = {root:'all',ans:'all',miss:'all',iok:'all',ifail:'ifail',hearly:'hearly',batt:'all',resch:'resch',canc:'canc',inq:'all',esc:'esc',bkd:'bkd',nosl:'nosl',abrt:'all'};
+
+const OB_CALLS = {
+ all:[
+ {id:'#OB-0312',nm:'Carlos Reyes',tp:'Botox · post-session',dt:'Today 13:45',du:'1:32',sc:87,oc:'booked'},
+ {id:'#OB-0311',nm:'Nina Okafor',tp:'Inactive 62 days',dt:'Today 11:20',du:'0:44',sc:52,oc:'cancelled'},
+ {id:'#OB-0310',nm:'Brian Lee',tp:'No-show recovery',dt:'Today 09:55',du:'1:10',sc:76,oc:'booked'},
+ {id:'#OB-0309',nm:'Jessica Wang',tp:'Referral lead',dt:'Yesterday 16:10',du:'2:05',sc:93,oc:'booked'},
+ {id:'#OB-0308',nm:'Paul Diaz',tp:'Inactive 78 days',dt:'Yesterday 14:30',du:'0:18',sc:31,oc:'escalated'},
+ {id:'#OB-0307',nm:'Sophia Grant',tp:'Botox · post-session',dt:'Dec 8 11:00',du:'1:48',sc:89,oc:'booked'},
+ {id:'#OB-0306',nm:'Michael Tran',tp:'Referral lead',dt:'Dec 8 10:20',du:'1:22',sc:68,oc:'inquiry'},
+ ],
+ 'botox-first':[
+ {id:'#OB-0312',nm:'Carlos Reyes',tp:'Botox · 1st done',dt:'Today 13:45',du:'1:32',sc:87,oc:'booked'},
+ {id:'#OB-0307',nm:'Sophia Grant',tp:'Botox · 1st done',dt:'Dec 8 11:00',du:'1:48',sc:89,oc:'booked'},
+ {id:'#OB-0301',nm:'Diana Fox',tp:'Botox · 1st done',dt:'Dec 6 14:10',du:'1:05',sc:71,oc:'inquiry'},
+ {id:'#OB-0298',nm:'Leo Pham',tp:'Botox · 1st done',dt:'Dec 5 10:30',du:'0:38',sc:44,oc:'cancelled'},
+ ],
+ 'inactive-60':[
+ {id:'#OB-0311',nm:'Nina Okafor',tp:'Inactive 62 days',dt:'Today 11:20',du:'0:44',sc:52,oc:'cancelled'},
+ {id:'#OB-0308',nm:'Paul Diaz',tp:'Inactive 78 days',dt:'Yesterday 14:30',du:'0:18',sc:31,oc:'escalated'},
+ {id:'#OB-0303',nm:'Rachel Sun',tp:'Inactive 91 days',dt:'Dec 7 09:15',du:'1:02',sc:63,oc:'inquiry'},
+ ],
+ 'no-show':[
+ {id:'#OB-0310',nm:'Brian Lee',tp:'No-show recovery',dt:'Today 09:55',du:'1:10',sc:76,oc:'booked'},
+ {id:'#OB-0305',nm:'Hannah Kim',tp:'No-show recovery',dt:'Dec 7 15:40',du:'0:55',sc:74,oc:'rescheduled'},
+ {id:'#OB-0299',nm:'Chris Adams',tp:'No-show recovery',dt:'Dec 5 13:00',du:'0:22',sc:38,oc:'cancelled'},
+ ],
+ referral:[
+ {id:'#OB-0309',nm:'Jessica Wang',tp:'Referral lead',dt:'Yesterday 16:10',du:'2:05',sc:93,oc:'booked'},
+ {id:'#OB-0306',nm:'Michael Tran',tp:'Referral lead',dt:'Dec 8 10:20',du:'1:22',sc:68,oc:'inquiry'},
+ {id:'#OB-0302',nm:'Aisha Brown',tp:'Referral lead',dt:'Dec 6 16:50',du:'1:55',sc:82,oc:'booked'},
+ ],
+};
+
+// ─── STATE ──────────────────────────────────
+const S = { obg:'all', inCalls: IN_CALLS.all, obCalls: OB_CALLS.all, aiv:null, ap:0, ad:0, playing:null };
+
+// ─── TAB ────────────────────────────────────
+function switchTab(tab, btn) {
+ document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+ document.querySelectorAll('.main-tab').forEach(e=>e.classList.remove('active','inbound','outbound'));
+ document.getElementById('tab-'+tab).classList.add('active');
+ btn.classList.add('active',tab);
+}
+
+// ─── CHARTS ─────────────────────────────────
+function rng(s){let x=Math.sin(s)*10000;return x-Math.floor(x);}
+function gen(n,base,amp,seed){const d=[];let v=base;for(let i=0;i<n;i++){v=Math.max(1,v+(rng(seed+i)-.48)*amp+Math.sin(i/7)*amp*.3);d.push(Math.round(v));}return d;}
+function curve(pts,W,H,mn,mx,cl){
+ const R=mx-mn||1;
+ const p=pts.map((v,i)=>[(i/(pts.length-1))*W,H-((v-mn)/R)*(H-18)-4]);
+ let d=`M${p[0][0]},${p[0][1]}`;
+ for(let i=1;i<p.length;i++){const c1x=p[i-1][0]+(p[i][0]-p[i-1][0])*.4,c2x=p[i][0]-(p[i][0]-p[i-1][0])*.4;d+=` C${c1x},${p[i-1][1]},${c2x},${p[i][1]},${p[i][0]},${p[i][1]}`;}
+ if(cl)d+=` L${p[p.length-1][0]},${H} L${p[0][0]},${H} Z`;
+ return d;
+}
+function xax(n,id){
+ const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+ const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],now=new Date(),step=Math.floor(n/6);
+ for(let i=0;i<=6;i++){const d=new Date(now);d.setDate(d.getDate()-(n-i*step));const div=document.createElement('div');div.textContent=ms[d.getMonth()]+' '+d.getDate();el.appendChild(div);}
+}
+// KPI data per period and group
+const IN_KPI = {
+ 365: {total:3820, booked:2214, rate:'58.0%', totalD:'↑ 22% vs prev year', bookedD:'↑ 17% vs prev year', rateD:'↑ 2.4 pts'},
+ 180: {total:1874, booked:1098, rate:'58.6%', totalD:'↑ 19% vs prev', bookedD:'↑ 14% vs prev', rateD:'↑ 2.8 pts'},
+ 90: {total:938, booked:561, rate:'59.8%', totalD:'↑ 18% vs prev', bookedD:'↑ 12% vs prev', rateD:'↑ 3.1 pts'},
+ 30: {total:298, booked:174, rate:'58.4%', totalD:'↑ 11% vs prev', bookedD:'↑ 8% vs prev', rateD:'↑ 1.8 pts'},
+ 7: {total:64, booked:37, rate:'57.8%', totalD:'↓ 3% vs prev', bookedD:'↓ 5% vs prev', rateD:'↓ 0.6 pts'},
+};
+const OB_KPI = {
+ all: {
+ 365: {placed:1680, leads:810, booked:362, rate:'21.5%', rev:'$34,390', placedD:'↑ 21% vs prev year', leadsD:'↑ 18% vs prev year', bookedD:'↑ 26% vs prev year', rateD:'↑ 0.8 pts', revD:'↑ 28% vs prev year'},
+ 180: {placed:824, leads:396, booked:178, rate:'21.6%', rev:'$16,910', placedD:'↑ 12% vs prev', leadsD:'↑ 15% vs prev', bookedD:'↑ 20% vs prev', rateD:'↑ 0.3 pts', revD:'↑ 22% vs prev'},
+ 90: {placed:412, leads:198, booked:89, rate:'21.6%', rev:'$8,455', placedD:'↑ 9%', leadsD:'↑ 14%', bookedD:'↑ 22%', rateD:'↓ 1.2 pts', revD:'↑ 19% vs prev'},
+ 30: {placed:131, leads:62, booked:27, rate:'20.6%', rev:'$2,565', placedD:'↑ 5%', leadsD:'↑ 7%', bookedD:'↑ 15%', rateD:'↓ 0.8 pts', revD:'↑ 12% vs prev'},
+ 7: {placed:28, leads:13, booked:5, rate:'17.9%', rev:'$475', placedD:'↓ 2%', leadsD:'↓ 4%', bookedD:'↓ 10%', rateD:'↓ 2.1 pts', revD:'↓ 8% vs prev'},
+ },
+ 'botox-first': {
+ 365: {placed:358, leads:248, booked:114, rate:'31.8%', rev:'$13,680', placedD:'↑ 18% vs prev year', leadsD:'↑ 22% vs prev year', bookedD:'↑ 30% vs prev year', rateD:'↑ 3.1 pts', revD:'↑ 33% vs prev year'},
+ 180: {placed:176, leads:122, booked:56, rate:'31.8%', rev:'$6,720', placedD:'↑ 14% vs prev', leadsD:'↑ 19% vs prev', bookedD:'↑ 25% vs prev', rateD:'↑ 2.7 pts', revD:'↑ 28% vs prev'},
+ 90: {placed:88, leads:61, booked:28, rate:'31.8%', rev:'$3,360', placedD:'↑ 12%', leadsD:'↑ 18%', bookedD:'↑ 28%', rateD:'↑ 2.3 pts', revD:'↑ 31% vs prev'},
+ 30: {placed:28, leads:18, booked:8, rate:'28.6%', rev:'$960', placedD:'↑ 8%', leadsD:'↑ 10%', bookedD:'↑ 20%', rateD:'↑ 1.1 pts', revD:'↑ 22% vs prev'},
+ 7: {placed:6, leads:4, booked:2, rate:'33.3%', rev:'$240', placedD:'↑ 3%', leadsD:'↑ 5%', bookedD:'↑ 15%', rateD:'↑ 3.0 pts', revD:'↑ 18% vs prev'},
+ },
+ 'inactive-60': {
+ 365: {placed:578, leads:301, booked:57, rate:'9.9%', rev:'$5,415', placedD:'↑ 8% vs prev year', leadsD:'↑ 5% vs prev year', bookedD:'↑ 10% vs prev year', rateD:'↑ 0.4 pts', revD:'↑ 11% vs prev year'},
+ 180: {placed:284, leads:148, booked:28, rate:'9.9%', rev:'$2,660', placedD:'↑ 5% vs prev', leadsD:'↑ 3% vs prev', bookedD:'↑ 7% vs prev', rateD:'↓ 0.2 pts', revD:'↑ 8% vs prev'},
+ 90: {placed:142, leads:74, booked:14, rate:'9.9%', rev:'$1,330', placedD:'↑ 4%', leadsD:'↑ 2%', bookedD:'↑ 5%', rateD:'↓ 0.5 pts', revD:'↑ 6% vs prev'},
+ 30: {placed:46, leads:22, booked:4, rate:'8.7%', rev:'$380', placedD:'↑ 2%', leadsD:'↓ 1%', bookedD:'↓ 3%', rateD:'↓ 1.2 pts', revD:'↓ 4% vs prev'},
+ 7: {placed:10, leads:4, booked:0, rate:'0%', rev:'$0', placedD:'→ flat', leadsD:'↓ 8%', bookedD:'↓ 100%', rateD:'↓ 9.9 pts', revD:'↓ 100% vs prev'},
+ },
+ 'no-show': {
+ 365: {placed:318, leads:167, booked:57, rate:'17.9%', rev:'$5,415', placedD:'↑ 10% vs prev year', leadsD:'↑ 14% vs prev year', bookedD:'↑ 22% vs prev year', rateD:'↑ 2.0 pts', revD:'↑ 24% vs prev year'},
+ 180: {placed:156, leads:82, booked:28, rate:'17.9%', rev:'$2,660', placedD:'↑ 7% vs prev', leadsD:'↑ 11% vs prev', bookedD:'↑ 19% vs prev', rateD:'↑ 1.8 pts', revD:'↑ 21% vs prev'},
+ 90: {placed:78, leads:41, booked:14, rate:'17.9%', rev:'$1,330', placedD:'↑ 6%', leadsD:'↑ 9%', bookedD:'↑ 18%', rateD:'↑ 1.5 pts', revD:'↑ 20% vs prev'},
+ 30: {placed:25, leads:13, booked:4, rate:'16%', rev:'$380', placedD:'↑ 3%', leadsD:'↑ 5%', bookedD:'↑ 10%', rateD:'↑ 0.8 pts', revD:'↑ 12% vs prev'},
+ 7: {placed:5, leads:2, booked:1, rate:'20%', rev:'$95', placedD:'↑ 1%', leadsD:'↑ 2%', bookedD:'↑ 5%', rateD:'↑ 2.1 pts', revD:'↑ 8% vs prev'},
+ },
+ referral: {
+ 365: {placed:424, leads:289, booked:155, rate:'36.5%', rev:'$14,725', placedD:'↑ 24% vs prev year', leadsD:'↑ 30% vs prev year', bookedD:'↑ 42% vs prev year', rateD:'↑ 5.8 pts', revD:'↑ 48% vs prev year'},
+ 180: {placed:208, leads:142, booked:76, rate:'36.5%', rev:'$7,220', placedD:'↑ 18% vs prev', leadsD:'↑ 24% vs prev', bookedD:'↑ 36% vs prev', rateD:'↑ 5.0 pts', revD:'↑ 40% vs prev'},
+ 90: {placed:104, leads:71, booked:38, rate:'36.5%', rev:'$3,610', placedD:'↑ 15%', leadsD:'↑ 20%', bookedD:'↑ 32%', rateD:'↑ 4.1 pts', revD:'↑ 38% vs prev'},
+ 30: {placed:33, leads:22, booked:11, rate:'33.3%', rev:'$1,045', placedD:'↑ 10%', leadsD:'↑ 14%', bookedD:'↑ 25%', rateD:'↑ 2.8 pts', revD:'↑ 28% vs prev'},
+ 7: {placed:7, leads:5, booked:2, rate:'28.6%', rev:'$190', placedD:'↑ 5%', leadsD:'↑ 8%', bookedD:'↑ 12%', rateD:'↑ 1.4 pts', revD:'↑ 15% vs prev'},
+ },
+};
+
+function getPeriod(){ return parseInt(document.getElementById('period-sel').value)||90; }
+
+function drawIn(n){
+ n=n||getPeriod();
+ const s1=gen(n,11,6,1),s2=s1.map(v=>Math.round(v*(0.55+rng(v)*.08)));
+ const mn=0,mx=Math.max(...s1)+3;
+ document.getElementById('in-l').setAttribute('d',curve(s1,900,130,mn,mx));
+ document.getElementById('in-a').setAttribute('d',curve(s1,900,130,mn,mx,1));
+ document.getElementById('bk-l').setAttribute('d',curve(s2,900,130,mn,mx));
+ document.getElementById('bk-a').setAttribute('d',curve(s2,900,130,mn,mx,1));
+ xax(n,'in-x');
+ // update subtitle
+ document.getElementById('in-sub').textContent='Daily trend · last '+n+' days';
+ // update KPIs
+ const k=IN_KPI[n]||IN_KPI[90];
+ document.getElementById('in-kpi-total').textContent=k.total.toLocaleString();
+ document.getElementById('in-kpi-total-d').textContent=k.totalD;
+ document.getElementById('in-kpi-booked').textContent=k.booked.toLocaleString();
+ document.getElementById('in-kpi-booked-d').textContent=k.bookedD;
+ document.getElementById('in-kpi-rate').textContent=k.rate;
+ document.getElementById('in-kpi-rate-d').textContent=k.rateD;
+}
+function drawOb(n){
+ n=n||getPeriod();
+ const s1=gen(n,5,4,7),s2=s1.map(v=>Math.round(v*(0.46+rng(v)*.08))),s3=s2.map(v=>Math.round(v*(0.42+rng(v)*.08)));
+ const s4=s3.map(v=>Math.round(v*95));const mx4=Math.max(...s4)||1;
+ const mn=0,mx=Math.max(...s1)+2;
+ const s4n=s4.map(v=>Math.round((v/mx4)*mx));
+ document.getElementById('ob-lo').setAttribute('d',curve(s1,900,130,mn,mx));
+ document.getElementById('ob-ao').setAttribute('d',curve(s1,900,130,mn,mx,1));
+ document.getElementById('ob-ll').setAttribute('d',curve(s2,900,130,mn,mx));
+ document.getElementById('ob-al').setAttribute('d',curve(s2,900,130,mn,mx,1));
+ document.getElementById('ob-lb').setAttribute('d',curve(s3,900,130,mn,mx));
+ document.getElementById('ob-lr').setAttribute('d',curve(s4n,900,130,mn,mx));
+ xax(n,'ob-x');
+ // update subtitle
+ const grp=S.obg;
+ const chipEl=document.querySelector('.ob-chip.sel');
+ const grpName=chipEl?chipEl.textContent.trim():'All outbound';
+ document.getElementById('ob-sub').textContent=grpName+' · last '+n+' days';
+ // update KPIs
+ const grpData=OB_KPI[grp]||OB_KPI.all;
+ const k=grpData[n]||grpData[90];
+ document.getElementById('ob-kpi-placed').textContent=k.placed.toLocaleString();
+ document.getElementById('ob-kpi-placed-d').textContent=k.placedD;
+ document.getElementById('ob-kpi-leads').textContent=k.leads.toLocaleString();
+ document.getElementById('ob-kpi-leads-d').textContent=k.leadsD;
+ document.getElementById('ob-kpi-booked').textContent=k.booked.toLocaleString();
+ document.getElementById('ob-kpi-booked-d').textContent=k.bookedD;
+ document.getElementById('ob-kpi-rate').textContent=k.rate;
+ document.getElementById('ob-kpi-rate-d').textContent=k.rateD;
+ document.getElementById('ob-kpi-rev').textContent=k.rev;
+ document.getElementById('ob-kpi-rev-d').textContent=k.revD;
+}
+function redraw(n){
+ n=parseInt(n)||getPeriod();
+ drawIn(n);drawOb(n);
+}
+
+// ─── FLOW RENDERER ──────────────────────────
+function renderFlow(cid, fd, mode){
+ const container=document.getElementById(cid);
+ container.innerHTML='';
+ const cols={};
+ fd.nodes.forEach(n=>{if(!cols[n.col])cols[n.col]=[];cols[n.col].push(n);});
+ const numC=Math.max(...Object.keys(cols).map(Number))+1;
+ const NW=160,NH=72,CG=90,RG=10,PAD=12;
+ const pos={};
+ let totalH=0;
+ for(let c=0;c<numC;c++){const nodes=cols[c]||[];const ch=nodes.length*NH+(nodes.length-1)*RG;totalH=Math.max(totalH,ch);}
+ totalH+=PAD*2;
+ const totalW=numC*NW+(numC-1)*CG+PAD*2;
+ for(let c=0;c<numC;c++){
+ const nodes=cols[c]||[];
+ const ch=nodes.length*NH+(nodes.length-1)*RG;
+ const sy=(totalH-ch)/2;
+ nodes.forEach((n,i)=>{pos[n.id]={x:PAD+c*(NW+CG),y:sy+i*(NH+RG),w:NW,h:NH};});
+ }
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('width',totalW);svg.setAttribute('height',totalH);
+ svg.style.cssText=`position:absolute;top:0;left:0;pointer-events:none;overflow:visible;`;
+ const maxW=Math.max(...fd.edges.map(e=>e.w));
+ fd.edges.forEach(edge=>{
+ const fr=pos[edge.f],to=pos[edge.t];if(!fr||!to)return;
+ const x1=fr.x+fr.w,y1=fr.y+fr.h/2,x2=to.x,y2=to.y+to.h/2;
+ const cx1=x1+CG*.55,cx2=x2-CG*.55;
+ const sw=Math.max(1.5,(edge.w/maxW)*20);
+ const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+ p.setAttribute('d',`M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}`);
+ p.setAttribute('fill','none');p.setAttribute('stroke',edge.c);
+ p.setAttribute('stroke-width',sw);p.setAttribute('stroke-linecap','round');
+ p.setAttribute('opacity','0.3');p.dataset.f=edge.f;p.dataset.t=edge.t;
+ svg.appendChild(p);
+ });
+ const wrap=document.createElement('div');
+ wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
+ wrap.appendChild(svg);
+ fd.nodes.forEach(n=>{
+ const p=pos[n.id];
+ const el=document.createElement('div');
+ el.className='fn '+n.cls;
+ el.style.cssText=`left:${p.x}px;top:${p.y}px;width:${p.w}px;min-height:${p.h}px;`;
+ el.innerHTML=`<div class="fn-count">${n.n.toLocaleString()}</div><div class="fn-lbl">${n.lbl.replace(/\n/g,'<br>')}</div><div class="fn-pct">${n.pct}</div>`;
+ el.onclick=()=>onNode(n,el,svg,fd,mode);
+ wrap.appendChild(el);
+ });
+ container.style.cssText='overflow-x:auto;overflow-y:hidden;';
+ const inner=document.createElement('div');
+ inner.style.cssText=`padding:20px;min-width:${totalW+40}px;position:relative;`;
+ inner.appendChild(wrap);
+ container.appendChild(inner);
+}
+
+function onNode(n,el,svg,fd,mode){
+ svg.querySelectorAll('path').forEach(p=>{
+ const conn=p.dataset.f===n.id||p.dataset.t===n.id;
+ p.setAttribute('opacity',conn?'0.75':'0.06');
+ });
+ document.querySelectorAll('.fn').forEach(f=>f.classList.remove('sel'));
+ el.classList.add('sel');
+ const segLabel=n.lbl.split('\n')[0];
+ if(mode==='in'){
+ const key=IN_NODE_MAP[n.id]||'all';
+ document.getElementById('in-seg').textContent=segLabel;
+ S.inCalls=IN_CALLS[key]||IN_CALLS.all;
+ // show sample note in count badge
+ const countEl=document.getElementById('in-call-count');
+ if(countEl){
+ const sample=S.inCalls.length, total=n.n;
+ countEl.textContent=sample>=total?'('+total+' recordings)':'(showing '+sample+' of '+total.toLocaleString()+' · sample)';
+ }
+ renderLog('in',S.inCalls,null,true); // skip auto-count update
+ } else {
+ document.getElementById('ob-seg').textContent=segLabel;
+ const calls=OB_CALLS[S.obg]||OB_CALLS.all;
+ const countEl=document.getElementById('ob-call-count');
+ if(countEl){
+ const sample=calls.length, total=n.n;
+ countEl.textContent=sample>=total?'('+total+' recordings)':'(showing '+sample+' of '+total.toLocaleString()+' · sample)';
+ }
+ renderLog('ob',calls,null,true);
+ }
+}
+
+// ─── OUTBOUND CHIPS ─────────────────────────
+function initChips(){
+ document.querySelectorAll('.ob-chip').forEach(chip=>{
+ chip.addEventListener('click',()=>{
+ document.querySelectorAll('.ob-chip').forEach(c=>c.classList.remove('sel'));
+ chip.classList.add('sel');
+ S.obg=chip.dataset.g;
+ const n=getPeriod();
+ document.getElementById('ob-sub').textContent=chip.textContent.trim()+' · last '+n+' days';
+ const isAll=S.obg==='all';
+ document.getElementById('ob-gate').classList.toggle('hidden',!isAll);
+ document.getElementById('ob-fwrap').style.display=isAll?'none':'';
+ if(!isAll&&OB_FLOWS[S.obg])renderFlow('ob-flow',OB_FLOWS[S.obg],'ob');
+ drawOb(n);
+ S.obCalls=OB_CALLS[S.obg]||OB_CALLS.all;
+ renderLog('ob',S.obCalls);
+ document.getElementById('ob-seg').textContent=chip.textContent.trim();
+ // reset count badge to simple sample count
+ const obCount=document.getElementById('ob-call-count');
+ if(obCount) obCount.textContent=S.obCalls.length?'('+S.obCalls.length+' recordings)':'';
+ });
+ });
+}
+
+// ─── CALL LOG ───────────────────────────────
+const OC={booked:['op-b','Booked'],cancelled:['op-c','Cancelled'],rescheduled:['op-r','Rescheduled'],escalated:['op-e','Escalated'],inquiry:['op-i','Inquiry'],voicemail:['op-v','Voicemail']};
+function sc(s){return s>=85?'var(--accent)':s>=60?'var(--orange)':'var(--red)';}
+
+function renderLog(pfx,calls,filter,skipCount){
+ const cid=pfx+'-rows',el=document.getElementById(cid);
+ const list=filter?calls.filter(c=>c.nm.toLowerCase().includes(filter)||c.id.toLowerCase().includes(filter)):calls;
+ // update count badge (only if not already set by onNode)
+ if(!skipCount){
+ const countEl=document.getElementById(pfx+'-call-count');
+ if(countEl) countEl.textContent=list&&list.length?'('+list.length+' recordings)':'';
+ }
+ if(!list||!list.length){el.innerHTML='<div class="empty"> No calls found.</div>';return;}
+ el.innerHTML=list.map((c,i)=>{
+ const[cls,lbl]=OC[c.oc]||['op-i','Other'];
+ const fl=c.fl?`<div class="cf">${c.fl}</div>`:'';
+ const waves=Array.from({length:12},(_,j)=>`<div class="wb" style="height:${3+Math.round(rng(i*12+j)*11)}px" id="wb-${pfx}-${i}-${j}"></div>`).join('');
+ return`<div class="cr" id="cr-${pfx}-${i}" onclick="playC('${pfx}',${i},'${c.nm}','${c.tp}','${c.dt}','${c.du}','${c.oc}')">
+ <div><div class="cn">${c.nm}</div><div class="cm">${c.id} · ${c.tp}</div>${fl}</div>
+ <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted2)">${c.dt}</div>
+ <div style="font-size:11px;font-family:'DM Mono',monospace">${c.du}</div>
+ <div style="font-size:11px;font-family:'DM Mono',monospace;color:${sc(c.sc)}">${c.sc}</div>
+ <div><span class="op ${cls}">${lbl}</span></div>
+ <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+ <div class="pbtn" id="pb-${pfx}-${i}">▶</div>
+ <div class="wf">${waves}</div>
+ </div>
+ </div>`;
+ }).join('');
+}
+
+function flog(pfx,val){
+ const calls=pfx==='in'?(S.inCalls||IN_CALLS.all):(S.obCalls||OB_CALLS.all);
+ renderLog(pfx,calls,val.toLowerCase(),false);
+}
+
+// ─── AUDIO ──────────────────────────────────
+function pd(s){const[m,sec]=s.split(':').map(Number);return m*60+sec;}
+function ft(s){const m=Math.floor(s/60),sc=Math.floor(s%60);return`${m}:${sc.toString().padStart(2,'0')}`;}
+
+function playC(pfx,i,nm,tp,dt,du,oc){
+ if(S.aiv){clearInterval(S.aiv);S.aiv=null;}
+ document.querySelectorAll('.pbtn').forEach(b=>{b.classList.remove('act');b.textContent='▶';});
+ document.querySelectorAll('.wb').forEach(b=>b.classList.remove('lit'));
+ document.querySelectorAll('.cr').forEach(r=>r.classList.remove('playing'));
+ S.ad=pd(du);S.ap=0;S.playing={pfx,i};
+ document.getElementById(`pb-${pfx}-${i}`).classList.add('act');
+ document.getElementById(`pb-${pfx}-${i}`).textContent='⏸';
+ document.getElementById(`cr-${pfx}-${i}`).classList.add('playing');
+ document.getElementById('an').textContent=nm;
+ document.getElementById('am').textContent=`${tp} · ${dt} · ${du}`;
+ document.getElementById('apf').style.width='0%';
+ document.getElementById('apt').textContent=`0:00 / ${du}`;
+ document.getElementById('apbtn').textContent='⏸';
+ document.getElementById('amod').classList.add('vis');
+ startA();
+}
+function startA(){
+ S.aiv=setInterval(()=>{
+ S.ap+=0.5;
+ if(S.ap>=S.ad){S.ap=S.ad;clearInterval(S.aiv);S.aiv=null;document.getElementById('apbtn').textContent='▶';if(S.playing){const b=document.getElementById(`pb-${S.playing.pfx}-${S.playing.i}`);if(b){b.classList.remove('act');b.textContent='▶';}}}
+ const pct=(S.ap/S.ad)*100;
+ document.getElementById('apf').style.width=pct+'%';
+ document.getElementById('apt').textContent=`${ft(S.ap)} / ${ft(S.ad)}`;
+ if(S.playing){const{pfx,i}=S.playing;for(let j=0;j<12;j++){const wb=document.getElementById(`wb-${pfx}-${i}-${j}`);if(wb)wb.classList.toggle('lit',j/12<=pct/100);}}
+ },500);
+}
+function togglePlay(){
+ if(S.aiv){clearInterval(S.aiv);S.aiv=null;document.getElementById('apbtn').textContent='▶';}
+ else{document.getElementById('apbtn').textContent='⏸';startA();}
+}
+function seekA(e,el){const r=el.getBoundingClientRect();S.ap=((e.clientX-r.left)/r.width)*S.ad;}
+function closeA(){
+ clearInterval(S.aiv);S.aiv=null;
+ document.getElementById('amod').classList.remove('vis');
+ document.querySelectorAll('.pbtn').forEach(b=>{b.classList.remove('act');b.textContent='▶';});
+ document.querySelectorAll('.wb').forEach(b=>b.classList.remove('lit'));
+ document.querySelectorAll('.cr').forEach(r=>r.classList.remove('playing'));
+ S.playing=null;
+}
+function showTx(){alert(' Call Transcript\n\nAI: Hi, this is Aria from Blue Wave Wellness! How can I help you today?\n\nPatient: Hi yes, I\'d like to book a chiro session for next Tuesday if possible?\n\nAI: Of course! We have 10am and 2pm available on Tuesday the 14th. Which works better?\n\nPatient: 2pm please.\n\nAI: Perfect! Can I get your name and a contact number?\n\nPatient: Sarah Miller, 555-0124.\n\nAI: You\'re all set! Confirmation SMS coming right now. See you Tuesday at 2pm, Sarah!');}
+
+// ─── INIT ───────────────────────────────────
+window.addEventListener('load',()=>{
+ drawIn(); drawOb();
+ renderFlow('in-flow',IN_FLOW,'in');
+ renderLog('in',IN_CALLS.all);
+ renderLog('ob',OB_CALLS.all);
+ initChips();
+ // set initial count badges
+ const ic=document.getElementById('in-call-count');
+ if(ic) ic.textContent='('+IN_CALLS.all.length+' recordings)';
+ const oc=document.getElementById('ob-call-count');
+ if(oc) oc.textContent='('+OB_CALLS.all.length+' recordings)';
+});
+</script>
+</body>
+</html>

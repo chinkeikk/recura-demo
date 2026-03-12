@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recura — User Journey Map</title>
+<style>
+ @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+ :root {
+ --bg: #0d1520;
+ --surface: #101c2e;
+ --surface2: #142034;
+ --border: #1e2e44;
+ --text: #e8eef8;
+ --muted: #7a90b0;
+ --accent: #3b8af0;
+ --red: #f07070;
+ --red-bg: #1e1030;
+ --yellow: #f0c844;
+ --yellow-bg: #1e1a08;
+ --orange: #f0a060;
+ --orange-bg: #1e1408;
+ --green: #4ad4a0;
+ --green-bg: #0e1e18;
+ --blue: #3b8af0;
+ --blue-bg: #0d1f3c;
+ --phase1: #3b8af0;
+ --phase2: #a080e0;
+ --phase3: #4ad4a0;
+ }
+
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+
+ body {
+ background: var(--bg);
+ color: var(--text);
+ font-family: 'Plus Jakarta Sans', sans-serif;
+ font-size: 13px;
+ line-height: 1.5;
+ }
+
+ /* ── TAB BAR ── */
+ .tab-bar {
+ display: flex;
+ align-items: center;
+ border-bottom: 1px solid var(--border);
+ padding: 0 24px;
+ background: var(--surface);
+ position: sticky;
+ top: 0;
+ z-index: 100;
+ height: 52px;
+ gap: 0;
+ }
+
+ .tab-logo {
+ font-family: 'Plus Jakarta Sans', sans-serif;
+ font-weight: 700;
+ font-size: 16px;
+ letter-spacing: -0.3px;
+ color: var(--text);
+ margin-right: 28px;
+ white-space: nowrap;
+ flex-shrink: 0;
+ }
+
+ .tab-btn {
+ padding: 6px 16px;
+ font-size: 11px;
+ font-weight: 500;
+ font-family: 'Plus Jakarta Sans', sans-serif;
+ cursor: pointer;
+ border: 1px solid transparent;
+ background: none;
+ color: var(--muted);
+ border-radius: 5px;
+ transition: all 0.13s;
+ letter-spacing: 0.1px;
+ }
+
+ .tab-btn:hover { color: var(--sub); background: var(--surface2); }
+ .tab-btn.active { color: var(--accent); background: rgba(59,138,240,0.08); border-color: rgba(59,138,240,0.2); font-weight: 500; }
+
+ .tab-content { display: none; padding: 32px 40px 60px; }
+ .tab-content.active { display: block; }
+
+ /* ── PAGE HEADER ── */
+ .page-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-start;
+ margin-bottom: 28px;
+ }
+
+ .page-header h2 {
+ font-size: 18px;
+ font-weight: 600;
+ letter-spacing: -0.4px;
+ margin-bottom: 5px;
+ }
+
+ .page-header p { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+ .legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+ .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+ .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+ /* ── SCROLL WRAPPER ── */
+ .table-scroll {
+ overflow-x: auto;
+ border-radius: 4px;
+ /* subtle scrollbar */
+ scrollbar-width: thin;
+ scrollbar-color: #333 #111;
+ }
+
+ .table-scroll::-webkit-scrollbar { height: 5px; }
+ .table-scroll::-webkit-scrollbar-track { background: #111; }
+ .table-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+ /* ── JOURNEY TABLE ── */
+ .journey-table {
+ border-collapse: separate;
+ border-spacing: 2px;
+ min-width: 1400px;
+ width: 100%;
+ }
+
+ /* Fixed label column */
+ .col-label { width: 120px; }
+
+ /* Phase span header */
+ .phase-span-th {
+ padding: 8px 16px;
+ text-align: left;
+ font-size: 10px;
+ font-family: 'DM Mono', monospace;
+ font-weight: 500;
+ text-transform: uppercase;
+ letter-spacing: 0.8px;
+ color: #fff;
+ border-radius: 3px 3px 0 0;
+ }
+
+ .phase-span-th.p1 { background: var(--phase1); }
+ .phase-span-th.p2 { background: var(--phase2); }
+ .phase-span-th.p3 { background: var(--phase3); color: #0f0f0f; }
+
+ .col-header-th {
+ padding: 12px 15px;
+ text-align: left;
+ background: var(--surface);
+ vertical-align: top;
+ border-top: 2px solid var(--border);
+ }
+
+ .col-header-th.p1 { border-top-color: var(--phase1); }
+ .col-header-th.p2 { border-top-color: var(--phase2); }
+ .col-header-th.p3 { border-top-color: var(--phase3); }
+
+ .col-th-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+ .col-th-sub { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+ /* Row label */
+ td.row-label {
+ padding: 12px 13px;
+ background: var(--surface);
+ font-size: 10px;
+ font-family: 'DM Mono', monospace;
+ color: var(--muted);
+ text-transform: uppercase;
+ letter-spacing: 0.4px;
+ vertical-align: middle;
+ border-left: 3px solid var(--border);
+ white-space: nowrap;
+ position: sticky;
+ left: 0;
+ z-index: 2;
+ }
+
+ td.row-label.hl { border-left-color: var(--accent); color: var(--accent); }
+
+ /* Data cells */
+ td.cell {
+ padding: 13px 15px;
+ vertical-align: top;
+ background: var(--surface);
+ width: 220px;
+ min-width: 220px;
+ max-width: 220px;
+ }
+
+ td.cell-pain { background: var(--red-bg); }
+ td.cell-risk { background: var(--yellow-bg); }
+ td.cell-opp { background: var(--green-bg); }
+ td.cell-orange { background: var(--orange-bg); }
+ td.cell-neutral { background: var(--surface2); }
+
+ /* pain bullet list */
+ .pain-list {
+ list-style: none;
+ display: flex;
+ flex-direction: column;
+ gap: 6px;
+ margin: 0;
+ padding: 0;
+ }
+ .pain-list li {
+ font-size: 11.5px;
+ color: var(--orange);
+ line-height: 1.5;
+ padding-left: 13px;
+ position: relative;
+ }
+ .pain-list li::before {
+ content: '·';
+ position: absolute;
+ left: 2px;
+ color: var(--orange);
+ font-size: 14px;
+ line-height: 1.3;
+ }
+
+ /* opportunity bullet list */
+ .opp-list {
+ list-style: none;
+ display: flex;
+ flex-direction: column;
+ gap: 6px;
+ margin: 0;
+ padding: 0;
+ }
+ .opp-list li {
+ font-size: 11.5px;
+ color: var(--green);
+ line-height: 1.5;
+ padding-left: 13px;
+ position: relative;
+ }
+ .opp-list li::before {
+ content: '·';
+ position: absolute;
+ left: 2px;
+ color: var(--green);
+ font-size: 14px;
+ line-height: 1.3;
+ }
+
+ /* phase divider column */
+ td.divider, th.divider { width: 6px; min-width: 6px; background: var(--bg); padding: 0; border: none; }
+
+ .cell-text { font-size: 11.5px; color: #bbb; line-height: 1.55; }
+ .cell-text.strong { font-weight: 500; color: var(--text); }
+ .cell-text.pain { color: var(--red); }
+ .cell-text.risk { color: var(--yellow); }
+ .cell-text.opp { color: var(--green); }
+
+ .tag {
+ display: inline-block;
+ font-size: 9px;
+ font-family: 'DM Mono', monospace;
+ font-weight: 500;
+ padding: 2px 7px;
+ border-radius: 3px;
+ text-transform: uppercase;
+ margin-bottom: 6px;
+ letter-spacing: 0.3px;
+ }
+
+ .tag-pain { background: #3a1515; color: var(--red); }
+ .tag-risk { background: #3a2e10; color: var(--yellow); }
+ .tag-opp { background: #103a1a; color: var(--green); }
+ .tag-feat { background: #102a3a; color: var(--blue); }
+
+ .emotion-wrap { text-align: center; padding: 4px 0; }
+ .emotion { font-size: 22px; }
+ .emotion-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 5px; }
+
+ /* inline metrics row */
+ .cell-metric-list { display: flex; flex-direction: column; gap: 8px; }
+ .cell-metric-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; gap: 6px; }
+ .cell-metric-name { font-size: 10.5px; color: #999; flex: 1; }
+ .cell-metric-val { font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; color: var(--text); white-space: nowrap; }
+
+ /* funnel-style metrics */
+ .m-funnel-row {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ flex-wrap: wrap;
+ height: 100%;
+ }
+ .m-funnel-step {
+ flex: 1;
+ background: #1e2230;
+ border-radius: 4px;
+ padding: 8px 12px;
+ text-align: center;
+ min-width: 80px;
+ }
+ .m-funnel-step.m-health {
+ background: #161820;
+ }
+ .m-funnel-name {
+ font-size: 9.5px;
+ color: var(--muted);
+ font-family: 'DM Mono', monospace;
+ margin-bottom: 5px;
+ line-height: 1.3;
+ }
+ .m-funnel-val {
+ font-size: 13px;
+ font-weight: 600;
+ color: var(--text);
+ font-family: 'DM Mono', monospace;
+ }
+ .m-funnel-val.m-health-val {
+ font-size: 11px;
+ color: #7a8a9a;
+ }
+ .m-funnel-sep {
+ color: #444;
+ font-size: 13px;
+ flex-shrink: 0;
+ font-family: 'DM Mono', monospace;
+ }
+
+ /* ── METRICS ── */
+ .metrics-section {
+ margin-top: 36px;
+ border-top: 1px solid var(--border);
+ padding-top: 28px;
+ }
+
+ .metrics-section h3 {
+ font-size: 13px;
+ font-weight: 600;
+ margin-bottom: 20px;
+ letter-spacing: -0.2px;
+ }
+
+ .metrics-grid { display: grid; gap: 10px; }
+ .metrics-grid.col3 { grid-template-columns: repeat(3, 1fr); }
+
+ .metric-group {
+ background: var(--surface);
+ border-radius: 5px;
+ padding: 16px 18px;
+ border-top: 3px solid var(--border);
+ }
+
+ .metric-group.p1 { border-top-color: var(--phase1); }
+ .metric-group.p2 { border-top-color: var(--phase2); }
+ .metric-group.p3 { border-top-color: var(--phase3); }
+
+ .metric-group-title {
+ font-size: 10px;
+ font-family: 'DM Mono', monospace;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ color: var(--muted);
+ margin-bottom: 14px;
+ }
+
+ .metric-item { margin-bottom: 10px; }
+ .metric-item:last-child { margin-bottom: 0; }
+
+ .metric-row {
+ display: flex;
+ justify-content: space-between;
+ align-items: baseline;
+ margin-bottom: 4px;
+ }
+
+ .metric-name { font-size: 11px; color: #999; }
+ .metric-value { font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; color: var(--text); white-space: nowrap; margin-left: 8px; }
+
+ .metric-bar-bg { height: 3px; background: #2a2a2a; border-radius: 2px; overflow: hidden; }
+ .metric-bar-fill { height: 100%; border-radius: 2px; }
+
+ /* funnel */
+ .funnel-wrap {
+ margin-bottom: 24px;
+ background: var(--surface);
+ border-radius: 5px;
+ padding: 20px 24px;
+ }
+
+ .funnel-title {
+ font-size: 10px;
+ font-family: 'DM Mono', monospace;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ color: var(--muted);
+ margin-bottom: 16px;
+ }
+
+ .funnel-flow { display: flex; align-items: center; gap: 4px; }
+
+ .funnel-step {
+ flex: 1;
+ background: #222;
+ border-radius: 4px;
+ padding: 10px 12px;
+ text-align: center;
+ }
+
+ .funnel-step-name { font-size: 9px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 5px; }
+ .funnel-step-val { font-size: 18px; font-weight: 600; color: var(--text); }
+ .funnel-step-sub { font-size: 9px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+ .funnel-connector { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 3px; }
+ .funnel-arrow { color: #444; font-size: 14px; }
+ .funnel-rate { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--red); }
+
+ /* callout */
+ .callout {
+ margin-top: 20px;
+ background: #1a1600;
+ border: 1px solid #3a3000;
+ border-left: 4px solid var(--yellow);
+ border-radius: 4px;
+ padding: 14px 18px;
+ }
+
+ .callout h4 {
+ font-size: 10px;
+ font-weight: 600;
+ color: var(--yellow);
+ margin-bottom: 10px;
+ text-transform: uppercase;
+ letter-spacing: 0.4px;
+ font-family: 'DM Mono', monospace;
+ }
+
+ .callout ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+ .callout li { font-size: 12px; color: #aaa; padding-left: 14px; position: relative; }
+ .callout li::before { content: '→'; position: absolute; left: 0; color: var(--yellow); font-size: 10px; top: 1px; }
+
+ .disclaimer {
+ margin-top: 24px;
+ font-size: 10px;
+ color: #444;
+ font-family: 'DM Mono', monospace;
+ font-style: italic;
+ }
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+ <div class="tab-logo">Recura</div>
+ <button class="tab-btn active" onclick="switchTab('clinic', this)"> &nbsp;Clinic User (B2B)</button>
+ <button class="tab-btn" onclick="switchTab('patient', this)"> &nbsp;Patient User (End User)</button>
+</div>
+
+
+<!-- ══════════════════ TAB 1: CLINIC ══════════════════ -->
+<div id="tab-clinic" class="tab-content active">
+
+ <div class="page-header">
+ <div>
+ <h2>Clinic User Journey &nbsp;—&nbsp; B2B (Practice Staff & Owners)</h2>
+ <p>Primary customer · Pays for Recura · NRR is driven by this journey</p>
+ </div>
+ <div class="legend">
+ <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Potential Pain</div>
+ <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Opportunity</div>
+ <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Existing Feature</div>
+ </div>
+ </div>
+
+ <div class="table-scroll">
+ <table class="journey-table">
+ <thead>
+ <!-- Phase span row -->
+ <tr>
+ <th class="col-label" style="background:transparent;border:none"></th>
+ <th class="phase-span-th p1" colspan="2">Phase 1 — Onboarding</th>
+ <th class="divider"></th>
+ <th class="phase-span-th p2" colspan="2">Phase 2 — Daily Operations</th>
+ <th class="divider"></th>
+ <th class="phase-span-th p3" colspan="1">Phase 3 — Renewal Decision</th>
+ </tr>
+ <!-- Step headers -->
+ <tr>
+ <th style="background:transparent;border:none"></th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">① Sign-up & Setup</div>
+ <div class="col-th-sub">Account, phone integration, AI config</div>
+ </th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">② First Real Call</div>
+ <div class="col-th-sub">AI handles live call, clinic verifies booking</div>
+ </th>
+ <th class="divider"></th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">③ Routine Usage</div>
+ <div class="col-th-sub">Daily call handling, scheduling, review</div>
+ </th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">④ Feature Expansion</div>
+ <div class="col-th-sub">Exploring SMS, payments, reporting</div>
+ </th>
+ <th class="divider"></th>
+ <th class="col-header-th p3">
+ <div class="col-th-name">⑤ Renewal Decision</div>
+ <div class="col-th-sub">Evaluates value, renews or churns</div>
+ </th>
+ </tr>
+ </thead>
+ <tbody>
+ <!-- What they do -->
+ <tr>
+ <td class="row-label">What they do</td>
+ <td class="cell"><div class="cell-text strong">Register → connect phone number → configure AI name, hours, responses → test setup</div></td>
+ <td class="cell"><div class="cell-text strong">First real patient call via AI → check if appointment was logged → verify SMS sent</div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="cell-text strong">Review daily call logs, missed calls, manage appointments, handle AI escalations</div></td>
+ <td class="cell"><div class="cell-text strong">Discover (or not) SMS reminders, payment collection, analytics. May try one new feature.</div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="cell-text strong">Receive renewal notice → try to recall if platform "felt useful" → decide without data</div></td>
+ </tr>
+ <!-- Pain -->
+ <tr>
+ <td class="row-label" style="border-left-color:var(--orange);color:var(--orange)"> Potential<br>Pain</td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Phone integration is technical — non-technical front desk staff gets stuck mid-setup</li>
+ <li>No clear "setup complete" state or guided checklist</li>
+ <li>Drop-off here means clinic never activates at all</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>AI misunderstands first call or fails to log the booking</li>
+ <li>Clinic immediately loses confidence with no recovery path</li>
+ <li>No proactive signal that things worked — clinic left guessing</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Voice, SMS, and scheduling modules have inconsistent UI logic</li>
+ <li>Staff re-learns context every time they switch modules</li>
+ <li>High cognitive load for non-technical front desk users</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Payments and reporting features are not discoverable</li>
+ <li>Clinics don't know these modules exist</li>
+ <li>Feature adoption for non-core modules likely &lt;30%</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>No built-in ROI summary at renewal time</li>
+ <li>Clinic can't quantify value — how many calls handled? Revenue recovered?</li>
+ <li>Renewal becomes a gut-feel decision with no data to support it</li>
+ </ul>
+ </td>
+ </tr>
+ <!-- Emotion -->
+ <tr>
+ <td class="row-label">Emotion</td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Anxious / Uncertain</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Nervous / Watching closely</div></div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Habitual / Neutral</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Confused / Unaware of features</div></div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Uncertain / Can't justify cost</div></div></td>
+ </tr>
+ <!--Opportunity -->
+ <tr>
+ <td class="row-label hl">Opportunity</td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Add step-by-step onboarding checklist with a clear "setup complete" state</li>
+ <li>Build a "test call" feature so clinic can simulate AI before going live</li>
+ <li>Show live setup progress so staff knows exactly where they are</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Push proactive notification after first call: "Your AI just handled its first call and booked an appointment"</li>
+ <li>Auto-surface a summary of what AI said and how it responded</li>
+ <li>Provide easy one-click correction if booking detail is wrong</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Unify nav and interaction patterns across voice, SMS, and scheduling modules</li>
+ <li>Introduce a single unified inbox so staff doesn't need to context-switch</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Surface feature nudges in context: "You missed 8 calls last week — enable SMS follow-up to auto-recover them"</li>
+ <li>Add a "features you haven't tried" section in the dashboard</li>
+ <li>Show estimated revenue impact of enabling each unused feature</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Auto-generate a pre-renewal ROI report: calls handled, bookings made, estimated revenue recovered</li>
+ <li>Send report 2 weeks before renewal — give clinic time to absorb it</li>
+ <li>Include a benchmark comparison ("clinics like yours average X bookings/month")</li>
+ </ul>
+ </td>
+ </tr>
+ <!-- Metrics Row 1: Primary -->
+ <tr>
+ <td class="row-label" style="border-left-color:var(--blue);color:var(--blue);font-size:9px;line-height:1.3">PRIMARY<br>METRICS</td>
+ <td class="cell" style="background:var(--blue-bg)" colspan="2">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Onboarding completion rate</div>
+ <div class="m-funnel-val">Target &gt;80%</div>
+ </div>
+ <div class="m-funnel-sep">→</div>
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Activation rate</div>
+ <div class="m-funnel-val">Target &gt;90%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:var(--blue-bg)" colspan="2">
+ <div class="m-funnel-row" style="justify-content:center">
+ <div class="m-funnel-step" style="max-width:180px">
+ <div class="m-funnel-name">Weekly active rate</div>
+ <div class="m-funnel-val">Target &gt;85%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:var(--blue-bg)">
+ <div class="m-funnel-row" style="justify-content:center">
+ <div class="m-funnel-step" style="max-width:180px">
+ <div class="m-funnel-name">Renewal rate</div>
+ <div class="m-funnel-val">Target &gt;85%</div>
+ </div>
+ </div>
+ </td>
+ </tr>
+ <!-- Metrics Row 2: Health -->
+ <tr>
+ <td class="row-label" style="border-left-color:#334;color:#6688aa;font-size:9px;line-height:1.3">HEALTH<br>METRICS</td>
+ <td class="cell" style="background:#111620" colspan="2">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Time to first call handled</div>
+ <div class="m-funnel-val m-health-val">Target &lt;48h</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:#111620" colspan="2">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Feature penetration</div>
+ <div class="m-funnel-val m-health-val">Voice · SMS · Payments</div>
+ </div>
+ 
+ </div>
+ <div class="m-funnel-sep" style="color:#334">·</div>
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Upgrade rate</div>
+ <div class="m-funnel-val m-health-val">Target &gt;20%</div>
+ </div>
+ <div class="m-funnel-sep" style="color:#334">·</div>
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Churn rate</div>
+ <div class="m-funnel-val m-health-val">Target &lt;3%</div>
+ </div>
+ </div>
+ </td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p class="disclaimer" style="margin-top:16px">* Metric values marked with "?" are hypotheses based on publicly available information. Actual numbers to be validated with internal data.</p>
+
+ </div>
+
+
+<!-- ══════════════════ TAB 2: PATIENT ══════════════════ -->
+<div id="tab-patient" class="tab-content">
+
+ <div class="page-header">
+ <div>
+ <h2>Patient User Journey &nbsp;—&nbsp; End User (Clinic's Patients)</h2>
+ <p>Not a direct customer · Served by AI receptionist · Experience quality indirectly drives clinic retention</p>
+ </div>
+ <div class="legend">
+ <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Potential Pain</div>
+ <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Opportunity</div>
+ <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Existing Feature</div>
+ </div>
+ </div>
+
+ <div class="table-scroll">
+ <table class="journey-table">
+ <thead>
+ <tr>
+ <th class="col-label" style="background:transparent;border:none"></th>
+ <th class="phase-span-th p1" colspan="4">Phase 1 — First Contact</th>
+ <th class="divider"></th>
+ <th class="phase-span-th p2" colspan="4">Phase 2 — Appointment Lifecycle</th>
+ <th class="divider"></th>
+ <th class="phase-span-th" style="background:#8b5e3c;" colspan="1">Phase 3 — Offline Visit</th>
+ <th class="divider"></th>
+ <th class="phase-span-th p3" colspan="3">Phase 4 — Post-Visit & Return</th>
+ </tr>
+ <tr>
+ <th style="background:transparent;border:none"></th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">① Inbound Call / SMS</div>
+ <div class="col-th-sub">Patient initiates contact</div>
+ </th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">② Call Received</div>
+ <div class="col-th-sub">AI picks up, greets patient</div>
+ </th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">③ Start Chatting</div>
+ <div class="col-th-sub">AI understands intent, converses</div>
+ </th>
+ <th class="col-header-th p1">
+ <div class="col-th-name">④ Scheduling</div>
+ <div class="col-th-sub">Slot selected, booking confirmed</div>
+ </th>
+ <th class="divider"></th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">⑤ Reschedule / Cancel</div>
+ <div class="col-th-sub">Patient modifies existing booking</div>
+ </th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">⑥ Confirm Schedule</div>
+ <div class="col-th-sub">Reminder sent, patient confirms</div>
+ </th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">⑦ Payment Sent</div>
+ <div class="col-th-sub">Payment link sent (if required)</div>
+ </th>
+ <th class="col-header-th p2">
+ <div class="col-th-name">⑧ Payment Complete</div>
+ <div class="col-th-sub">Patient pays, revenue captured</div>
+ </th>
+ <th class="divider"></th>
+ <th class="col-header-th" style="border-top-color:#8b5e3c">
+ <div class="col-th-name">⑨ Show Up / No-Show</div>
+ <div class="col-th-sub">Patient attends or misses visit</div>
+ </th>
+ <th class="divider"></th>
+ <th class="col-header-th p3">
+ <div class="col-th-name">⑩ Follow-up Sent</div>
+ <div class="col-th-sub">Post-visit outreach triggered</div>
+ </th>
+ <th class="col-header-th p3">
+ <div class="col-th-name">⑪ Reply / Survey</div>
+ <div class="col-th-sub">Patient responds or completes survey</div>
+ </th>
+ <th class="col-header-th p3">
+ <div class="col-th-name">⑫ Rebook</div>
+ <div class="col-th-sub">Patient books next visit</div>
+ </th>
+ </tr>
+ </thead>
+ <tbody>
+ <!-- What they do -->
+ <tr>
+ <td class="row-label">What they do</td>
+ <td class="cell"><div class="cell-text strong">Calls or texts clinic number</div></td>
+ <td class="cell"><div class="cell-text strong">AI answers, introduces itself, asks how to help</div></td>
+ <td class="cell"><div class="cell-text strong">States reason for call — booking, question, or cancellation</div></td>
+ <td class="cell"><div class="cell-text strong">Selects slot, confirms name, contact, and visit type</div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="cell-text strong">Texts or calls to change or cancel an existing appointment</div></td>
+ <td class="cell"><div class="cell-text strong">Receives SMS reminder, confirms attendance via reply</div></td>
+ <td class="cell"><div class="cell-text strong">Receives SMS with payment link</div></td>
+ <td class="cell"><div class="cell-text strong">Taps link, enters payment info, submits</div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="cell-text strong">Arrives at clinic for visit — or doesn't</div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="cell-text strong">Receives post-visit SMS from clinic</div></td>
+ <td class="cell"><div class="cell-text strong">Replies to message or completes a short satisfaction survey</div></td>
+ <td class="cell"><div class="cell-text strong">Taps rebooking link or calls back to schedule next visit</div></td>
+ </tr>
+ <!-- Potential Pain -->
+ <tr>
+ <td class="row-label" style="border-left-color:var(--orange);color:var(--orange)"> Potential<br>Pain</td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Patient calls outside hours — no human available, unclear if AI is on</li>
+ <li>Patient sends SMS but doesn't know if anyone will respond</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Patient realizes it's AI and immediately hangs up</li>
+ <li>AI greeting sounds robotic or too scripted — first impression fails</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>AI misunderstands intent and goes down wrong path</li>
+ <li>No graceful recovery when AI gets confused</li>
+ <li>No option to reach a human when needed</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>No suitable slots available — patient gives up</li>
+ <li>Booking confirmed but no immediate confirmation sent</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Reschedule flow is unclear — patient doesn't know how to change via SMS</li>
+ <li>Cancellation is too easy with no rebooking prompt</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Reminder SMS looks generic or spammy — patient ignores it</li>
+ <li>Confirmation reply not acknowledged — patient unsure if it worked</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Payment link looks untrustworthy — patient doesn't tap it</li>
+ <li>No clarity on what they're paying for or how much</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Payment page lacks clinic branding — feels like a scam</li>
+ <li>No fallback if patient wants to pay in person instead</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>No-show with no automated follow-up to recover the slot or reschedule</li>
+ <li>Clinic has no visibility into why patient didn't show</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Follow-up sent too late or at wrong time — patient has moved on</li>
+ <li>Message is generic with no reference to what the visit was for</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>Survey is too long — patient ignores it</li>
+ <li>No acknowledgement after patient responds</li>
+ </ul>
+ </td>
+ <td class="cell cell-orange">
+ <ul class="pain-list">
+ <li>No rebooking prompt in the follow-up — patient has to initiate themselves</li>
+ <li>Too much friction between "I want to rebook" and actually booking</li>
+ </ul>
+ </td>
+ </tr>
+ <!-- Emotion -->
+ <tr>
+ <td class="row-label">Emotion</td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Neutral / Task-oriented</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Skeptical of AI</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Hoping it works</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Relieved / Done</div></div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Slightly frustrated</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Passive / Waiting</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Hesitant</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Done / Committed</div></div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Satisfied (if showed up)</div></div></td>
+ <td class="divider"></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Indifferent</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Engaged (if relevant)</div></div></td>
+ <td class="cell"><div class="emotion-wrap"><div class="emotion"></div><div class="emotion-label">Motivated to return</div></div></td>
+ </tr>
+ <!--Opportunity -->
+ <tr>
+ <td class="row-label hl">Opportunity</td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Auto-reply to missed calls/SMS instantly: "We got your message, here's how to book"</li>
+ <li>Show clear availability signal so patient knows someone (or AI) will respond</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Warm, natural opening that builds trust in first 5 seconds</li>
+ <li>AI clearly identifies itself upfront — honesty outperforms mimicking human</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Improve intent recognition to reduce wrong-path conversations</li>
+ <li>Add graceful escalation: "Let me have someone call you back within 15 min"</li>
+ <li>Reduce avg. intent resolution time to under 90 seconds</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Offer waitlist option when no slots available — don't let patient leave empty-handed</li>
+ <li>Send instant booking confirmation SMS with all details</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>One-tap reschedule link in every reminder — make it frictionless</li>
+ <li>When patient cancels, immediately offer next available slot</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Personalize reminder with clinic name, provider, and visit type</li>
+ <li>Send at optimal timing: 24h + 2h before visit</li>
+ <li>Acknowledge confirmation reply with a warm auto-response</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Send payment link with clear clinic branding and visit summary</li>
+ <li>Include "pay now" or "pay at visit" option to reduce drop-off</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Streamline payment page — minimize taps to complete</li>
+ <li>Send payment receipt immediately with visit details</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Auto-trigger no-show follow-up: "We missed you — want to reschedule?"</li>
+ <li>Flag no-show pattern to clinic for proactive outreach</li>
+ </ul>
+ </td>
+ <td class="divider"></td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Send within 2–4 hours post-visit while experience is fresh</li>
+ <li>Personalize message based on visit type and provider name</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Keep survey to 1–2 questions max — prioritize completion over depth</li>
+ <li>Auto-share positive feedback to clinic dashboard</li>
+ </ul>
+ </td>
+ <td class="cell cell-opp">
+ <ul class="opp-list">
+ <li>Embed one-tap rebooking directly in follow-up message</li>
+ <li>Use visit cadence data to suggest ideal next visit timing</li>
+ </ul>
+ </td>
+ </tr>
+ <!-- Primary Metrics -->
+ <tr>
+ <td class="row-label" style="border-left-color:var(--blue);color:var(--blue);font-size:9px;line-height:1.3">PRIMARY<br>METRICS</td>
+ <td class="cell" style="background:var(--blue-bg)" colspan="4">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">AI call handle rate</div>
+ <div class="m-funnel-val">Target &gt;70%</div>
+ </div>
+ <div class="m-funnel-sep">→</div>
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Caller abandon rate</div>
+ <div class="m-funnel-val">Target &lt;15%</div>
+ </div>
+ <div class="m-funnel-sep">→</div>
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Booking completion rate</div>
+ <div class="m-funnel-val">Target &gt;80%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:var(--blue-bg)" colspan="4">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">No-show rate</div>
+ <div class="m-funnel-val">Target &lt;15%</div>
+ </div>
+ <div class="m-funnel-sep">→</div>
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Payment completion rate</div>
+ <div class="m-funnel-val">Target &gt;60%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:var(--blue-bg)">
+ <div class="m-funnel-row" style="justify-content:center">
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Show-up rate</div>
+ <div class="m-funnel-val">Target &gt;85%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:var(--blue-bg)" colspan="3">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Follow-up response rate</div>
+ <div class="m-funnel-val">Target &gt;30%</div>
+ </div>
+ <div class="m-funnel-sep">→</div>
+ <div class="m-funnel-step">
+ <div class="m-funnel-name">Rebooking rate</div>
+ <div class="m-funnel-val">Target &gt;25%</div>
+ </div>
+ </div>
+ </td>
+ </tr>
+ <!-- Health Metrics -->
+ <tr>
+ <td class="row-label" style="border-left-color:#334;color:#6688aa;font-size:9px;line-height:1.3">HEALTH<br>METRICS</td>
+ <td class="cell" style="background:#111620" colspan="4">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Avg. intent resolution time</div>
+ <div class="m-funnel-val m-health-val">Target &lt;90s</div>
+ </div>
+ <div class="m-funnel-sep" style="color:#334">·</div>
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Human escalation rate</div>
+ <div class="m-funnel-val m-health-val">Target &lt;20%</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:#111620" colspan="4">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">SMS confirmation open rate</div>
+ <div class="m-funnel-val m-health-val">Target &gt;75%</div>
+ </div>
+ <div class="m-funnel-sep" style="color:#334">·</div>
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Reschedule / cancel rate</div>
+ <div class="m-funnel-val m-health-val">Track trend</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:#111620">
+ <div class="m-funnel-row" style="justify-content:center">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">No-show recovery rate</div>
+ <div class="m-funnel-val m-health-val">Track trend</div>
+ </div>
+ </div>
+ </td>
+ <td class="divider"></td>
+ <td class="cell" style="background:#111620" colspan="3">
+ <div class="m-funnel-row">
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Survey completion rate</div>
+ <div class="m-funnel-val m-health-val">Target &gt;20%</div>
+ </div>
+ <div class="m-funnel-sep" style="color:#334">·</div>
+ <div class="m-funnel-step m-health">
+ <div class="m-funnel-name">Return visit frequency</div>
+ <div class="m-funnel-val m-health-val">Track trend</div>
+ </div>
+ </div>
+ </td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+
+ <!-- Funnel visualization (kept below table) -->
+ <div class="funnel-wrap" style="margin-top:24px">
+ <div class="funnel-title">End-to-end conversion funnel (hypothetical)</div>
+ <div class="funnel-flow">
+ <div class="funnel-step">
+ <div class="funnel-step-name">Inbound Contact</div>
+ <div class="funnel-step-val">100%</div>
+ <div class="funnel-step-sub">Calls + SMS</div>
+ </div>
+ <div class="funnel-connector"><div class="funnel-arrow">→</div><div class="funnel-rate">~70%</div></div>
+ <div class="funnel-step">
+ <div class="funnel-step-name">AI Handled</div>
+ <div class="funnel-step-val">~70%</div>
+ <div class="funnel-step-sub">Not abandoned</div>
+ </div>
+ <div class="funnel-connector"><div class="funnel-arrow">→</div><div class="funnel-rate">~60%</div></div>
+ <div class="funnel-step">
+ <div class="funnel-step-name">Booking Attempted</div>
+ <div class="funnel-step-val">~42%</div>
+ <div class="funnel-step-sub">Reached scheduling</div>
+ </div>
+ <div class="funnel-connector"><div class="funnel-arrow">→</div><div class="funnel-rate">~80%</div></div>
+ <div class="funnel-step">
+ <div class="funnel-step-name">Booking Confirmed</div>
+ <div class="funnel-step-val">~34%</div>
+ <div class="funnel-step-sub">Appt. logged</div>
+ </div>
+ <div class="funnel-connector"><div class="funnel-arrow">→</div><div class="funnel-rate">~60%</div></div>
+ <div class="funnel-step">
+ <div class="funnel-step-name">Payment Completed</div>
+ <div class="funnel-step-val">~20%</div>
+ <div class="funnel-step-sub">Revenue captured</div>
+ </div>
+ <div class="funnel-connector"><div class="funnel-arrow">→</div><div class="funnel-rate">~85%</div></div>
+ <div class="funnel-step" style="border-top:2px solid var(--green)">
+ <div class="funnel-step-name">Show Up</div>
+ <div class="funnel-step-val" style="color:var(--green)">~17%</div>
+ <div class="funnel-step-sub">Visit completed</div>
+ </div>
+ </div>
+ </div>
+
+ <p class="disclaimer" style="margin-top:16px">* All funnel percentages are hypotheses based on publicly available benchmarks for AI voice/SMS products. Actual numbers must be validated with internal data.</p>
+</div>
+
+<script>
+ function switchTab(tab, btn) {
+ document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+ document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+ document.getElementById('tab-' + tab).classList.add('active');
+ btn.classList.add('active');
+ }
+</script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recura — Product Intelligence Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#0d1520; --s1:#101c2e; --s2:#142034; --s3:#1a2840; --s4:#20304c;
+ --b1:#1e2e44; --b2:#253650; --b3:#2e4264;
+ --text:#e8eef8; --sub:#7a90b0; --dim:#405070;
+ --lime:#3b8af0; --blue:#3b8af0; --orange:#f0a060; --purple:#a080e0; --red:#f07070; --green:#4ad4a0; --yellow:#f0c844;
+ --f-mono:'DM Mono',monospace; --f-serif:'Plus Jakarta Sans',sans-serif; --f-sans:'Plus Jakarta Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;line-height:1.5;min-height:100vh;}
+
+/* ── TOPBAR ── */
+.top{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 24px;gap:0;position:sticky;top:0;z-index:200;}
+.top-logo{font-family:var(--f-sans);font-size:16px;font-weight:700;color:var(--text);margin-right:28px;letter-spacing:-0.3px;}
+.top-logo em{color:var(--lime);font-style:italic;}
+.top-nav{display:flex;gap:2px;flex:1;}
+.nb{padding:6px 16px;font-size:11px;font-weight:500;color:var(--dim);cursor:pointer;border-radius:5px;transition:all 0.13s;border:1px solid transparent;}
+.nb:hover{color:var(--sub);background:var(--s2);}
+.nb.act{color:var(--lime);background:rgba(200,240,96,0.08);border-color:rgba(200,240,96,0.15);}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.chip{font-size:10px;font-family:var(--f-mono);color:var(--sub);border:1px solid var(--b2);padding:4px 10px;border-radius:4px;background:var(--s2);}
+.chip em{font-style:normal;}
+
+/* ── PAGES ── */
+.pg{display:none;} .pg.act{display:block;}
+
+/* ── SHARED ── */
+.wrap{padding:24px 28px;}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:var(--f-mono);padding:2px 8px;border-radius:3px;white-space:nowrap;}
+.p-live{background:rgba(112,208,144,0.12);color:var(--green);border:1px solid rgba(112,208,144,0.2);}
+.p-beta{background:rgba(96,180,240,0.12);color:var(--blue);border:1px solid rgba(96,180,240,0.2);}
+.p-build{background:rgba(240,160,96,0.12);color:var(--orange);border:1px solid rgba(240,160,96,0.2);}
+.p-plan{background:rgba(70,70,80,0.2);color:var(--sub);border:1px solid var(--b2);}
+.p-crit{background:rgba(240,112,112,0.12);color:var(--red);border:1px solid rgba(240,112,112,0.2);}
+.p-high{background:rgba(240,160,96,0.12);color:var(--orange);border:1px solid rgba(240,160,96,0.2);}
+.p-med{background:rgba(240,208,96,0.1);color:var(--yellow);border:1px solid rgba(240,208,96,0.18);}
+.p-low{background:rgba(70,70,80,0.18);color:var(--sub);border:1px solid var(--b2);}
+.card{background:var(--s2);border:1px solid var(--b1);border-radius:8px;}
+.card-h{padding:13px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;}
+.card-t{font-size:10px;font-family:var(--f-mono);color:var(--sub);text-transform:uppercase;letter-spacing:0.4px;}
+.card-b{padding:18px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.pg.act .wrap>*{animation:fadeUp 0.3s ease backwards;}
+.pg.act .wrap>*:nth-child(1){animation-delay:.04s;}
+.pg.act .wrap>*:nth-child(2){animation-delay:.09s;}
+.pg.act .wrap>*:nth-child(3){animation-delay:.14s;}
+.pg.act .wrap>*:nth-child(4){animation-delay:.19s;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--b3);border-radius:2px;}
+
+/* ══════════════════════════════════
+ PAGE 1: ROADMAP
+══════════════════════════════════ */
+/* kpi strip */
+.kpi-strip{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
+.kpi{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:16px 20px;flex:1;min-width:140px;}
+.kpi-v{font-size:28px;font-weight:600;font-family:var(--f-mono);letter-spacing:-1.5px;line-height:1;}
+.kpi-l{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:0.5px;margin-top:5px;}
+.kpi-d{font-size:10px;font-family:var(--f-mono);margin-top:3px;}
+.up{color:var(--green);} .dn{color:var(--red);} .nt{color:var(--sub);}
+
+/* timeline */
+.timeline{position:relative;padding-left:24px;}
+.tl-line{position:absolute;left:7px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--lime),var(--b3) 80%);}
+.q-block{position:relative;margin-bottom:16px;}
+.q-dot{position:absolute;left:-24px;top:18px;width:14px;height:14px;border-radius:50%;border:2px solid var(--b3);background:var(--s1);transition:all 0.2s;z-index:2;}
+.q-block.current .q-dot{background:var(--lime);border-color:var(--lime);box-shadow:0 0 10px rgba(200,240,96,0.4);}
+.q-block.past .q-dot{background:var(--green);border-color:var(--green);}
+.q-card{background:var(--s2);border:1px solid var(--b1);border-radius:8px;overflow:hidden;transition:border-color 0.15s;}
+.q-card:hover{border-color:var(--b3);}
+.q-block.current .q-card{border-color:rgba(200,240,96,0.2);}
+.q-header{display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer;}
+.q-label{font-family:var(--f-mono);font-size:11px;font-weight:500;color:var(--sub);min-width:56px;}
+.q-block.current .q-label{color:var(--lime);}
+.q-block.past .q-label{color:var(--green);}
+.q-tagline{font-family:var(--f-serif);font-size:16px;flex:1;letter-spacing:-0.2px;}
+.q-status-area{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.q-chevron{color:var(--dim);font-size:10px;transition:transform 0.2s;}
+.q-block.open .q-chevron{transform:rotate(90deg);}
+.q-body{display:none;padding:0 20px 18px;}
+.q-block.open .q-body{display:block;}
+.q-sections{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-top:14px;border-top:1px solid var(--b1);}
+.qs-title{font-size:9px;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:0.5px;color:var(--dim);margin-bottom:10px;}
+.feat-list{list-style:none;}
+.feat-list li{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:12px;color:var(--sub);}
+.feat-list li:last-child{border:none;}
+.feat-dot{width:5px;height:5px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.m-cell{background:var(--s3);border-radius:6px;padding:10px 12px;}
+.m-val{font-size:16px;font-family:var(--f-mono);font-weight:500;letter-spacing:-0.5px;}
+.m-lbl{font-size:9px;color:var(--sub);margin-top:2px;}
+.m-target{font-size:9px;font-family:var(--f-mono);color:var(--dim);margin-top:2px;}
+.m-actual{font-size:9px;font-family:var(--f-mono);}
+
+/* ══════════════════════════════════
+ PAGE 2: FEATURE MAP
+══════════════════════════════════ */
+.mod-tabs{display:flex;gap:4px;margin-bottom:18px;}
+.mod-tab{padding:7px 18px;font-size:11px;font-weight:500;border-radius:6px;cursor:pointer;color:var(--dim);transition:all 0.13s;border:1px solid transparent;}
+.mod-tab:hover{color:var(--sub);background:var(--s2);}
+.mod-tab.act{color:var(--text);background:var(--s3);border-color:var(--b3);}
+
+.feat-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;}
+.adopt-panel{display:flex;flex-direction:column;gap:14px;}
+.adopt-hdr{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:18px;}
+.adopt-num{font-size:36px;font-weight:600;font-family:var(--f-mono);letter-spacing:-2px;line-height:1;}
+.adopt-sub{font-size:10px;color:var(--sub);margin-top:4px;}
+.adopt-bar-bg{height:6px;background:var(--s4);border-radius:3px;margin-top:12px;overflow:hidden;}
+.adopt-bar{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+.adopt-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.ams{background:var(--s3);border-radius:5px;padding:8px 10px;}
+.ams-v{font-size:14px;font-family:var(--f-mono);font-weight:500;}
+.ams-l{font-size:9px;color:var(--sub);margin-top:1px;}
+
+/* version gantt */
+.ver-wrap{overflow-x:auto;}
+.ver-gantt{min-width:600px;}
+.ver-header{display:grid;gap:0;border-bottom:1px solid var(--b1);background:var(--s1);}
+.ver-hcell{padding:6px 10px;font-size:9px;font-family:var(--f-mono);color:var(--dim);text-align:center;border-right:1px solid var(--b1);text-transform:uppercase;}
+.ver-hcell:first-child{text-align:left;border-right:1px solid var(--b2);}
+.ver-row{display:grid;gap:0;border-bottom:1px solid var(--b1);min-height:34px;align-items:center;transition:background 0.1s;position:relative;}
+.ver-row:last-child{border:none;}
+.ver-row:hover{background:rgba(255,255,255,0.015);}
+.ver-label{padding:0 10px;font-size:11px;color:var(--sub);border-right:1px solid var(--b2);height:100%;display:flex;align-items:center;font-family:var(--f-mono);}
+.ver-cell{position:relative;border-right:1px solid var(--b1);height:34px;}
+.ver-bar{position:absolute;top:7px;height:20px;border-radius:4px;cursor:pointer;display:flex;align-items:center;padding:0 8px;font-size:9px;font-family:var(--f-mono);white-space:nowrap;overflow:hidden;transition:filter 0.15s;}
+.ver-bar:hover{filter:brightness(1.2);}
+.vb-live{background:rgba(112,208,144,0.18);border:1px solid rgba(112,208,144,0.3);color:var(--green);}
+.vb-build{background:rgba(240,160,96,0.15);border:1px solid rgba(240,160,96,0.25);color:var(--orange);}
+.vb-plan{background:rgba(70,70,80,0.2);border:1px solid var(--b3);color:var(--sub);}
+.vb-beta{background:rgba(96,180,240,0.15);border:1px solid rgba(96,180,240,0.25);color:var(--blue);}
+.now-marker{position:absolute;top:0;bottom:0;width:2px;background:var(--lime);opacity:0.6;pointer-events:none;z-index:5;}
+
+/* tooltip */
+.vtip{position:fixed;background:var(--s3);border:1px solid var(--b3);border-radius:7px;padding:10px 14px;font-size:11px;pointer-events:none;z-index:600;max-width:260px;box-shadow:0 6px 24px rgba(0,0,0,0.6);display:none;min-width:200px;}
+.vtip-ver{font-family:var(--f-mono);font-size:10px;color:var(--lime);margin-bottom:6px;}
+.vtip-title{font-weight:600;margin-bottom:6px;}
+.vtip-item{font-size:10px;color:var(--sub);padding:2px 0;display:flex;gap:6px;}
+.vtip-item::before{content:'·';color:var(--dim);}
+
+/* issues */
+.issue-row{display:grid;grid-template-columns:2fr 80px 100px 90px 80px 80px;gap:0;padding:10px 18px;border-bottom:1px solid var(--b1);align-items:center;transition:background 0.1s;}
+.issue-row:hover{background:rgba(255,255,255,0.02);}
+.issue-hdr{display:grid;grid-template-columns:2fr 80px 100px 90px 80px 80px;gap:0;padding:8px 18px;background:var(--s1);border-bottom:1px solid var(--b2);}
+.ih{font-size:9px;font-family:var(--f-mono);color:var(--dim);text-transform:uppercase;letter-spacing:0.4px;}
+.i-title{font-size:12px;}
+.i-sub{font-size:10px;color:var(--sub);}
+.i-mono{font-size:10px;font-family:var(--f-mono);color:var(--sub);}
+
+/* ══════════════════════════════════
+ PAGE 3: BACKLOG
+══════════════════════════════════ */
+.bl-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.bl-search{flex:1;min-width:200px;background:var(--s2);border:1px solid var(--b2);color:var(--text);padding:8px 14px;border-radius:6px;font-size:12px;font-family:var(--f-sans);outline:none;}
+.bl-search:focus{border-color:var(--b3);}
+.bl-search::placeholder{color:var(--dim);}
+.bl-select{background:var(--s2);border:1px solid var(--b2);color:var(--sub);padding:7px 12px;border-radius:6px;font-size:11px;font-family:var(--f-mono);cursor:pointer;outline:none;}
+.add-btn{padding:7px 16px;background:var(--lime);color:#0a0a0c;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f-sans);white-space:nowrap;transition:filter 0.15s;}
+.add-btn:hover{filter:brightness(1.1);}
+
+.bl-table{width:100%;}
+.bl-hdr{display:grid;grid-template-columns:2.2fr 90px 80px 90px 110px 100px 80px 80px;padding:8px 18px;background:var(--s1);border-bottom:1px solid var(--b2);border-radius:8px 8px 0 0;}
+.bl-h{font-size:9px;font-family:var(--f-mono);color:var(--dim);text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;user-select:none;}
+.bl-h:hover{color:var(--sub);}
+.bl-row{display:grid;grid-template-columns:2.2fr 90px 80px 90px 110px 100px 80px 80px;padding:10px 18px;border-bottom:1px solid var(--b1);align-items:center;transition:background 0.1s;}
+.bl-row:hover{background:rgba(255,255,255,0.02);}
+.bl-row.new-row{background:rgba(200,240,96,0.04);border-left:2px solid var(--lime);}
+.bl-title{font-size:12px;}
+.bl-sub{font-size:10px;color:var(--sub);}
+.bl-mono{font-size:10px;font-family:var(--f-mono);color:var(--sub);}
+
+/* impact bar */
+.imp-wrap{display:flex;align-items:center;gap:6px;}
+.imp-bar-bg{flex:1;height:4px;background:var(--s4);border-radius:2px;overflow:hidden;}
+.imp-bar{height:100%;border-radius:2px;}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;display:none;align-items:center;justify-content:center;}
+.modal-bg.vis{display:flex;}
+.modal{background:var(--s2);border:1px solid var(--b2);border-radius:10px;width:520px;max-width:95vw;padding:24px;position:relative;}
+.modal-title{font-family:var(--f-serif);font-size:18px;margin-bottom:18px;}
+.form-row{margin-bottom:14px;}
+.form-label{font-size:10px;font-family:var(--f-mono);color:var(--sub);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;display:block;}
+.form-inp{width:100%;background:var(--s3);border:1px solid var(--b2);color:var(--text);padding:9px 12px;border-radius:6px;font-size:12px;font-family:var(--f-sans);outline:none;}
+.form-inp:focus{border-color:var(--b3);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn-cancel{padding:8px 16px;background:var(--s3);border:1px solid var(--b2);color:var(--sub);border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--f-sans);}
+.btn-save{padding:8px 20px;background:var(--lime);color:#0a0a0c;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f-sans);}
+.close-btn{position:absolute;top:16px;right:18px;color:var(--dim);cursor:pointer;font-size:18px;line-height:1;}
+.close-btn:hover{color:var(--text);}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="top">
+ <div class="top-logo">Recura</div>
+ <nav class="top-nav">
+ <div class="nb act" onclick="nav('roadmap',this)">Roadmap</div>
+ <div class="nb" onclick="nav('features',this)">Feature Map</div>
+ <div class="nb" onclick="nav('backlog',this)">Backlog</div>
+ </nav>
+ <div class="top-r">
+ <div class="chip">62 active · 8 onboarding</div>
+ <div class="chip" style="color:var(--green);border-color:rgba(112,208,144,0.25)">NRR <em style="color:var(--green)">112%</em></div>
+ </div>
+</div>
+
+<!-- ════════════ PAGE 1: ROADMAP ════════════ -->
+<div id="pg-roadmap" class="pg act">
+<div class="wrap">
+
+ <!-- KPI Strip -->
+ <div class="kpi-strip">
+ <div class="kpi"><div class="kpi-v" style="color:var(--lime)">62</div><div class="kpi-l">Active clients</div><div class="kpi-d up">↑ 18 this quarter</div></div>
+ <div class="kpi"><div class="kpi-v" style="color:var(--blue)">8</div><div class="kpi-l">Onboarding now</div><div class="kpi-d nt">Avg 12d to live</div></div>
+ <div class="kpi"><div class="kpi-v" style="color:var(--green)">112%</div><div class="kpi-l">NRR</div><div class="kpi-d up">↑ 8 pts vs Q3 '25</div></div>
+ <div class="kpi"><div class="kpi-v" style="color:var(--orange)">9%</div><div class="kpi-l">Annual churn</div><div class="kpi-d dn">↑ 2pts — watch</div></div>
+ <div class="kpi"><div class="kpi-v" style="color:var(--yellow)">$38K</div><div class="kpi-l">MRR</div><div class="kpi-d up">↑ 22% vs Q4 '25</div></div>
+ <div class="kpi"><div class="kpi-v" style="color:var(--sub)">3.2×</div><div class="kpi-l">Avg modules/clinic</div><div class="kpi-d up">↑ from 2.1 at launch</div></div>
+ </div>
+
+ <div class="timeline" id="timeline"></div>
+</div>
+</div>
+
+<!-- ════════════ PAGE 2: FEATURE MAP ════════════ -->
+<div id="pg-features" class="pg">
+<div class="wrap">
+ <div class="mod-tabs" id="mod-tabs">
+ <div class="mod-tab act" onclick="switchMod('voice',this)" data-color="#60b4f0"> Voice</div>
+ <div class="mod-tab" onclick="switchMod('sms',this)" data-color="#c8f060"> SMS</div>
+ <div class="mod-tab" onclick="switchMod('payments',this)" data-color="#f0a060"> Payments</div>
+ <div class="mod-tab" onclick="switchMod('scheduling',this)" data-color="#70d090"> Scheduling</div>
+ </div>
+ <div class="feat-layout">
+ <!-- Left: adoption panel -->
+ <div class="adopt-panel" id="adopt-panel"></div>
+ <!-- Right: gantt + issues -->
+ <div>
+ <div class="card" style="margin-bottom:16px">
+ <div class="card-h"><div class="card-t">Version history &amp; roadmap</div><div style="font-size:9px;font-family:var(--f-mono);color:var(--dim)">Hover bar to see changelog</div></div>
+ <div class="ver-wrap" id="ver-wrap"></div>
+ </div>
+ <div class="card">
+ <div class="card-h"><div class="card-t">Open issues &amp; tickets</div><div id="issue-count" class="chip" style="font-size:9px"></div></div>
+ <div class="issue-hdr">
+ <div class="ih">Issue</div>
+ <div class="ih">Priority</div>
+ <div class="ih">Impact</div>
+ <div class="ih">Fix version</div>
+ <div class="ih">Owner</div>
+ <div class="ih">Status</div>
+ </div>
+ <div id="issue-list"></div>
+ </div>
+ </div>
+ </div>
+</div>
+</div>
+
+<!-- ════════════ PAGE 3: BACKLOG ════════════ -->
+<div id="pg-backlog" class="pg">
+<div class="wrap">
+ <div class="bl-toolbar">
+ <input class="bl-search" placeholder="Search tickets, features, owners…" oninput="filterBacklog()" id="bl-search">
+ <select class="bl-select" id="bl-mod" onchange="filterBacklog()">
+ <option value="">All modules</option>
+ <option>Voice</option><option>SMS</option><option>Payments</option><option>Scheduling</option><option>Outbound</option><option>Analytics</option>
+ </select>
+ <select class="bl-select" id="bl-src" onchange="filterBacklog()">
+ <option value="">All sources</option>
+ <option>Customer support</option><option>Engineering</option><option>Product</option><option>Sales</option><option>Clinic feedback</option>
+ </select>
+ <select class="bl-select" id="bl-prio" onchange="filterBacklog()">
+ <option value="">All priorities</option>
+ <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+ </select>
+ <select class="bl-select" id="bl-sort" onchange="filterBacklog()">
+ <option value="impact">Sort: Impact ↓</option>
+ <option value="prio">Sort: Priority ↓</option>
+ <option value="date">Sort: Date ↓</option>
+ </select>
+ <button class="add-btn" onclick="openModal()">+ Add ticket</button>
+ </div>
+
+ <div class="card">
+ <div class="bl-hdr">
+ <div class="bl-h">Title &amp; problem statement</div>
+ <div class="bl-h">Module</div>
+ <div class="bl-h">Priority</div>
+ <div class="bl-h">Impact score</div>
+ <div class="bl-h">Source</div>
+ <div class="bl-h">Owner</div>
+ <div class="bl-h">Fix version</div>
+ <div class="bl-h">Status</div>
+ </div>
+ <div id="bl-rows"></div>
+ </div>
+</div>
+</div>
+
+<!-- ADD TICKET MODAL -->
+<div class="modal-bg" id="modal-bg">
+ <div class="modal">
+ <div class="close-btn" onclick="closeModal()">×</div>
+ <div class="modal-title">New ticket</div>
+ <div class="form-row">
+ <label class="form-label">Title</label>
+ <input class="form-inp" id="f-title" placeholder="Short description of the issue or request">
+ </div>
+ <div class="form-row">
+ <label class="form-label">Problem statement</label>
+ <input class="form-inp" id="f-problem" placeholder="What breaks or what's missing for the clinic?">
+ </div>
+ <div class="form-row-2">
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Module</label>
+ <select class="form-inp" id="f-mod">
+ <option>Voice</option><option>SMS</option><option>Payments</option><option>Scheduling</option><option>Outbound</option><option>Analytics</option>
+ </select>
+ </div>
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Priority</label>
+ <select class="form-inp" id="f-prio">
+ <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+ </select>
+ </div>
+ </div>
+ <div class="form-row-2" style="margin-top:14px">
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Source</label>
+ <select class="form-inp" id="f-src">
+ <option>Customer support</option><option>Engineering</option><option>Product</option><option>Sales</option><option>Clinic feedback</option>
+ </select>
+ </div>
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Impacted clinics (est.)</label>
+ <input class="form-inp" id="f-clinics" type="number" placeholder="e.g. 12">
+ </div>
+ </div>
+ <div class="form-row-2" style="margin-top:14px">
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Owner</label>
+ <input class="form-inp" id="f-owner" placeholder="@name">
+ </div>
+ <div class="form-row" style="margin:0">
+ <label class="form-label">Target fix version</label>
+ <input class="form-inp" id="f-ver" placeholder="e.g. v2.4 or Won't fix">
+ </div>
+ </div>
+ <div class="form-actions">
+ <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+ <button class="btn-save" onclick="saveTicket()">Save ticket</button>
+ </div>
+ </div>
+</div>
+
+<div class="vtip" id="vtip"></div>
+
+<script>
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+const QUARTERS = [
+ {
+ id:'q3-25', label:'Q3 2025', status:'past',
+ tagline:'Foundation: Voice receptionist goes live',
+ features:[
+ {text:'Voice AI inbound call handling (GA)', done:true, color:'#70d090'},
+ {text:'Basic appointment scheduling via phone', done:true, color:'#70d090'},
+ {text:'Human escalation fallback', done:true, color:'#70d090'},
+ {text:'First 12 clinics onboarded', done:true, color:'#70d090'},
+ ],
+ metrics:[
+ {label:'Active clients', target:'15', actual:'14', status:'nt'},
+ {label:'AI handle rate', target:'>75%', actual:'82%', status:'up'},
+ {label:'NRR', target:'100%', actual:'104%', status:'up'},
+ {label:'MRR', target:'$10K', actual:'$11.2K', status:'up'},
+ ]
+ },
+ {
+ id:'q4-25', label:'Q4 2025', status:'past',
+ tagline:'Revenue unlock: SMS + Payments ship',
+ features:[
+ {text:'SMS confirmation & no-show reminders', done:true, color:'#70d090'},
+ {text:'Pre-visit deposit collection (Stripe)', done:true, color:'#70d090'},
+ {text:'Post-visit follow-up SMS', done:true, color:'#70d090'},
+ {text:'Outbound no-show recovery beta (14 clinics)', done:true, color:'#60b4f0'},
+ {text:'Call analytics dashboard v1', done:true, color:'#70d090'},
+ ],
+ metrics:[
+ {label:'Active clients', target:'40', actual:'44', status:'up'},
+ {label:'Payment adoption', target:'>40%', actual:'48%', status:'up'},
+ {label:'NRR', target:'106%', actual:'108%', status:'up'},
+ {label:'MRR', target:'$26K', actual:'$29K', status:'up'},
+ ]
+ },
+ {
+ id:'q1-26', label:'Q1 2026', status:'current',
+ tagline:'Scale & deepen: Payments v2 + multi-location foundation',
+ features:[
+ {text:'Payments v2 — invoicing, receipts, retry logic', done:false, color:'#f0a060'},
+ {text:'2-way SMS chat (beta → GA)', done:false, color:'#60b4f0'},
+ {text:'Waitlist management beta', done:false, color:'#60b4f0'},
+ {text:'Revenue attribution dashboard', done:false, color:'#60b4f0'},
+ {text:'PatientNow integration beta', done:false, color:'#c090f0'},
+ ],
+ metrics:[
+ {label:'Active clients', target:'65', actual:null, status:'nt'},
+ {label:'Payment adoption', target:'>65%', actual:null, status:'nt'},
+ {label:'NRR', target:'115%', actual:null, status:'nt'},
+ {label:'MRR', target:'$42K', actual:null, status:'nt'},
+ ]
+ },
+ {
+ id:'q2-26', label:'Q2 2026', status:'future',
+ tagline:'Outbound as a growth engine: campaigns + referrals',
+ features:[
+ {text:'Outbound campaign builder (self-serve)', done:false, color:'#c090f0'},
+ {text:'Referral lead outreach automation', done:false, color:'#c090f0'},
+ {text:'Multi-provider scheduling support', done:false, color:'#70d090'},
+ {text:'Membership & package payments', done:false, color:'#f0a060'},
+ {text:'Slack alerts + report export', done:false, color:'#f0d060'},
+ ],
+ metrics:[
+ {label:'Active clients', target:'90', actual:null, status:'nt'},
+ {label:'Outbound adoption', target:'>50%', actual:null, status:'nt'},
+ {label:'NRR', target:'120%', actual:null, status:'nt'},
+ {label:'MRR', target:'$60K', actual:null, status:'nt'},
+ ]
+ },
+ {
+ id:'q3-26', label:'Q3 2026', status:'future',
+ tagline:'Enterprise-ready: multi-location, deep integrations',
+ features:[
+ {text:'Multi-location clinic management', done:false, color:'#c090f0'},
+ {text:'Jane App + Mindbody integrations', done:false, color:'#9090b0'},
+ {text:'Google Calendar sync', done:false, color:'#70d090'},
+ {text:'Custom voice persona builder', done:false, color:'#60b4f0'},
+ {text:'Enterprise reporting + white-label', done:false, color:'#f0d060'},
+ ],
+ metrics:[
+ {label:'Active clients', target:'130', actual:null, status:'nt'},
+ {label:'Avg modules/clinic', target:'4.5', actual:null, status:'nt'},
+ {label:'NRR', target:'128%', actual:null, status:'nt'},
+ {label:'MRR', target:'$88K', actual:null, status:'nt'},
+ ]
+ },
+];
+
+const MODULES_DATA = {
+ voice:{
+ color:'#60b4f0', icon:'', name:'Voice Receptionist',
+ adoption:94, clinics:58, total:62, wau:58, churn:8,
+ versions:[
+ {label:'v1.0', s:0, e:2, type:'live', title:'Voice v1.0 — Sep 2025', items:['Inbound call answering','Intent detection & routing','Human escalation fallback']},
+ {label:'v1.2', s:2, e:4, type:'live', title:'Voice v1.2 — Nov 2025', items:['Improved intent NLU','Reduced escalation rate 8→4%','Multi-service routing']},
+ {label:'v1.4', s:4, e:6, type:'live', title:'Voice v1.4 — Jan 2026', items:['Call recording & scoring','Post-call SMS trigger','Silence detection fix']},
+ {label:'v1.5 (beta)', s:5, e:8, type:'beta', title:'Voice v1.5 — beta', items:['Multi-language ES/ZH','Custom greeting text']},
+ {label:'v2.0', s:8, e:11, type:'plan', title:'Voice v2.0 — Q3 2026', items:['Custom voice persona builder','Real-time sentiment','Whisper transcription upgrade']},
+ ],
+ issues:[
+ {title:'AI loops on specialty service names',sub:'Clinics with unusual treatment names get 3+ loops before escalation',prio:'Critical',clinics:9,ver:'v1.6',owner:'@eng-li',status:'In progress'},
+ {title:'Hang-up <10s rate elevated after last deploy',sub:'After v1.4 deploy, 8% of calls hang up within 10s (was 4%)',prio:'Critical',clinics:58,ver:'v1.4.1',owner:'@eng-chen',status:'Investigating'},
+ {title:'Booking confirmation not reading back time correctly',sub:'AI says "3pm" instead of "3:00 PM Tuesday" — patient confusion',prio:'High',clinics:18,ver:'v1.5',owner:'@eng-li',status:'Scheduled'},
+ {title:'Multi-language mixing: EN words mid-ES call',sub:'Spanish calls randomly revert to EN mid-sentence',prio:'High',clinics:11,ver:'v1.5',owner:'@eng-wang',status:'In progress'},
+ {title:'No voicemail detection for after-hours calls',sub:'AI tries to book on voicemail, leaves partial recording',prio:'Medium',clinics:22,ver:'v1.6',owner:'@pm-zh',status:'Backlog'},
+ ]
+ },
+ sms:{
+ color:'#c8f060', icon:'', name:'SMS & Messaging',
+ adoption:81, clinics:50, total:62, wau:50, churn:4,
+ versions:[
+ {label:'v1.0', s:1, e:3, type:'live', title:'SMS v1.0 — Oct 2025', items:['Appointment confirmation SMS','24h reminder','Cancellation flow']},
+ {label:'v1.1', s:3, e:5, type:'live', title:'SMS v1.1 — Dec 2025', items:['Post-visit follow-up (day 1 & 7)','No-show recovery SMS','Custom sender name']},
+ {label:'v1.2 (beta)', s:4, e:7, type:'beta', title:'SMS v1.2 — beta', items:['2-way SMS chat','Emoji support','Smart reply suggestions']},
+ {label:'v1.3', s:6, e:9, type:'build', title:'SMS v1.3 — Q2 2026', items:['Outbound SMS campaigns','Segmented audience targeting','Campaign analytics']},
+ ],
+ issues:[
+ {title:'SMS delivery failure on VOIP numbers',sub:'~12% of clinics use VOIP — high delivery fail rate',prio:'High',clinics:8,ver:'v1.2',owner:'@eng-chen',status:'In progress'},
+ {title:'Opt-out handling non-compliant in 2 states',sub:'STOP reply not properly removing from all sequences',prio:'Critical',clinics:50,ver:'v1.1.1',owner:'@eng-wang',status:'Urgent — legal'},
+ {title:'Follow-up SMS firing twice occasionally',sub:'3 clinics reported duplicate follow-up messages',prio:'Medium',clinics:3,ver:'v1.2',owner:'@eng-li',status:'Investigating'},
+ {title:'2-way chat: emoji keyboard not shown on Android',sub:'Android users can\'t access emoji in chat thread',prio:'Low',clinics:14,ver:'v1.2',owner:'@eng-wang',status:'Backlog'},
+ ]
+ },
+ payments:{
+ color:'#f0a060', icon:'', name:'Payments',
+ adoption:54, clinics:33, total:62, wau:33, churn:14,
+ versions:[
+ {label:'v1.0', s:2, e:4, type:'live', title:'Payments v1.0 — Dec 2025', items:['Pre-visit deposit via SMS link','Stripe integration','Basic payment status in dashboard']},
+ {label:'v2.0', s:2, e:5, type:'build', title:'Payments v2.0 — Q1 2026 ', items:['Invoicing & PDF receipts','Payment retry logic','Partial payment support','Refund flow']},
+ {label:'v2.1', s:5, e:8, type:'plan', title:'Payments v2.1 — Q2 2026', items:['Membership & package billing','Recurring charge support','Revenue reporting by service']},
+ ],
+ issues:[
+ {title:'Payment link expires before patient opens it',sub:'Link expires 30min after send — many no-shows still unpaid',prio:'Critical',clinics:33,ver:'v2.0',owner:'@eng-chen',status:'In v2.0'},
+ {title:'Stripe webhook failures losing payment status updates',sub:'~5% of successful payments not reflecting in dashboard',prio:'Critical',clinics:20,ver:'v1.0.1',owner:'@eng-li',status:'Hotfix pending'},
+ {title:'No partial payment flow for expensive treatments',sub:'Clinics want 50% deposit + 50% at visit. Not supported.',prio:'High',clinics:15,ver:'v2.0',owner:'@pm-zh',status:'In v2.0'},
+ {title:'Payment receipts not auto-emailing to patients',sub:'Clinics manually forwarding — adds front desk work',prio:'Medium',clinics:22,ver:'v2.0',owner:'@eng-chen',status:'Scheduled'},
+ ]
+ },
+ scheduling:{
+ color:'#70d090', icon:'', name:'Scheduling Engine',
+ adoption:88, clinics:55, total:62, wau:55, churn:4,
+ versions:[
+ {label:'v1.0', s:0, e:3, type:'live', title:'Scheduling v1.0 — Sep 2025', items:['Real-time slot booking via AI','Reschedule & cancel flow','Timezone handling']},
+ {label:'v1.1', s:3, e:5, type:'live', title:'Scheduling v1.1 — Dec 2025', items:['Buffer time between appointments','Block-out dates','Provider-specific slots']},
+ {label:'v1.2 (beta)', s:4, e:7, type:'beta', title:'Scheduling v1.2 — beta', items:['Waitlist management','Instant fill when slot opens','Waitlist SMS notification']},
+ {label:'v2.0', s:6, e:10, type:'plan', title:'Scheduling v2.0 — Q2/Q3 2026', items:['Multi-provider management','Google Calendar sync','Room/resource booking']},
+ ],
+ issues:[
+ {title:'Double-booking on shared provider slots',sub:'2 clinics with multiple providers report rare double-book',prio:'High',clinics:8,ver:'v1.1.1',owner:'@eng-wang',status:'Investigating'},
+ {title:'Timezone conversion error for PST clinics',sub:'PST clinics see slots 1hr off when DST changes',prio:'High',clinics:6,ver:'v1.1.1',owner:'@eng-li',status:'Scheduled'},
+ {title:'Booking flow doesn\'t handle same-day slots well',sub:'AI books same-day but confirmation SMS fires 2h late',prio:'Medium',clinics:12,ver:'v1.2',owner:'@eng-chen',status:'Backlog'},
+ {title:'Waitlist not clearing when patient cancels',sub:'Beta: waitlist spot stays held even after the cancel',prio:'Medium',clinics:18,ver:'v1.2',owner:'@eng-wang',status:'Beta fix'},
+ ]
+ }
+};
+
+const BACKLOG_DATA = [
+ {id:'T-001',title:'Opt-out SMS compliance fix',problem:'STOP reply not removing from all sequences — legal risk in CA/TX',module:'SMS',prio:'Critical',impact:95,clinics:50,source:'Engineering',owner:'@eng-wang',ver:'v1.1.1',status:'In progress',date:'2026-03-10'},
+ {id:'T-002',title:'Stripe webhook losing payment status',problem:'~5% of payments not reflected in dashboard after successful charge',module:'Payments',prio:'Critical',impact:88,clinics:20,source:'Customer support',owner:'@eng-li',ver:'v1.0.1',status:'Hotfix pending',date:'2026-03-09'},
+ {id:'T-003',title:'Payment link expires too quickly',problem:'30min expiry means many patients miss the link — deposits uncollected',module:'Payments',prio:'Critical',impact:85,clinics:33,source:'Clinic feedback',owner:'@eng-chen',ver:'v2.0',status:'In v2.0',date:'2026-03-08'},
+ {id:'T-004',title:'Hang-up <10s spike post v1.4 deploy',problem:'8% hang-up rate immediately after greeting (was 4%) — regressionn',module:'Voice',prio:'Critical',impact:82,clinics:58,source:'Product',owner:'@eng-chen',ver:'v1.4.1',status:'Investigating',date:'2026-03-11'},
+ {id:'T-005',title:'AI loops on unusual treatment names',problem:'3+ loop cycles on clinic-specific service names before escalation',module:'Voice',prio:'Critical',impact:78,clinics:9,source:'Customer support',owner:'@eng-li',ver:'v1.6',status:'In progress',date:'2026-03-07'},
+ {id:'T-006',title:'Double-booking on multi-provider slots',problem:'Rare but high-impact: 2 patients booked same slot with same provider',module:'Scheduling',prio:'High',impact:72,clinics:8,source:'Clinic feedback',owner:'@eng-wang',ver:'v1.1.1',status:'Investigating',date:'2026-03-06'},
+ {id:'T-007',title:'PST timezone offset during DST',problem:'Clinics in PST see all slots shifted by 1hr when daylight saving changes',module:'Scheduling',prio:'High',impact:65,clinics:6,source:'Clinic feedback',owner:'@eng-li',ver:'v1.1.1',status:'Scheduled',date:'2026-03-05'},
+ {id:'T-008',title:'SMS delivery failure on VOIP numbers',problem:'High delivery failure for clinics using VOIP lines (~12% of base)',module:'SMS',prio:'High',impact:60,clinics:8,source:'Engineering',owner:'@eng-chen',ver:'v1.2',status:'In progress',date:'2026-03-04'},
+ {id:'T-009',title:'Partial payment support missing',problem:'Clinics want 50% deposit, 50% at visit. Not supported in v1.',module:'Payments',prio:'High',impact:58,clinics:15,source:'Sales',owner:'@pm-zh',ver:'v2.0',status:'In v2.0',date:'2026-03-03'},
+ {id:'T-010',title:'Booking confirmation reads time wrong',problem:'AI confirms "3pm" instead of "3:00 PM Tuesday the 15th"',module:'Voice',prio:'High',impact:52,clinics:18,source:'Customer support',owner:'@eng-li',ver:'v1.5',status:'Scheduled',date:'2026-03-02'},
+ {id:'T-011',title:'No voicemail detection after hours',problem:'AI leaves partial recording on voicemail instead of handling gracefully',module:'Voice',prio:'Medium',impact:44,clinics:22,source:'Product',owner:'@pm-zh',ver:'v1.6',status:'Backlog',date:'2026-03-01'},
+ {id:'T-012',title:'Duplicate follow-up SMS',problem:'3 clinics report patients receiving follow-up message twice',module:'SMS',prio:'Medium',impact:38,clinics:3,source:'Customer support',owner:'@eng-li',ver:'v1.2',status:'Investigating',date:'2026-02-28'},
+ {id:'T-013',title:'Same-day booking confirmation SMS delayed',problem:'AI books same-day slot but confirmation SMS arrives 2h later',module:'Scheduling',prio:'Medium',impact:35,clinics:12,source:'Clinic feedback',owner:'@eng-chen',ver:'v1.2',status:'Backlog',date:'2026-02-27'},
+ {id:'T-014',title:'Payment receipts not auto-emailed',problem:'Clinics manually forwarding receipts — adds admin burden',module:'Payments',prio:'Medium',impact:32,clinics:22,source:'Sales',owner:'@eng-chen',ver:'v2.0',status:'Scheduled',date:'2026-02-26'},
+ {id:'T-015',title:'Multi-language mixing mid-call',problem:'ES calls randomly revert to EN mid-sentence in v1.5 beta',module:'Voice',prio:'High',impact:42,clinics:11,source:'Engineering',owner:'@eng-wang',ver:'v1.5',status:'In progress',date:'2026-02-25'},
+ {id:'T-016',title:'Waitlist not clearing on cancel (beta)',problem:'Beta: waitlist spots remain held after patient cancels appointment',module:'Scheduling',prio:'Medium',impact:28,clinics:18,source:'Engineering',owner:'@eng-wang',ver:'v1.2',status:'Beta fix',date:'2026-02-24'},
+ {id:'T-017',title:'Android emoji keyboard missing in 2-way chat',problem:'Android users can\'t access emoji in SMS chat thread',module:'SMS',prio:'Low',impact:18,clinics:14,source:'Clinic feedback',owner:'@eng-wang',ver:'v1.2',status:'Backlog',date:'2026-02-20'},
+ {id:'T-018',title:'Outbound call not respecting DND hours',problem:'A few clinics reported AI calling patients at 7am before DND window',module:'Voice',prio:'High',impact:55,clinics:24,source:'Customer support',owner:'@eng-li',ver:'v1.5',status:'Investigating',date:'2026-03-08'},
+];
+
+// ════════════════════════════════════════════
+// PAGE 1: ROADMAP
+// ════════════════════════════════════════════
+function buildTimeline(){
+ const el=document.getElementById('timeline');
+ el.innerHTML='<div class="tl-line"></div>'+QUARTERS.map((q,qi)=>{
+ const isOpen=q.status==='current';
+ const metricHtml=q.metrics.map(m=>`
+ <div class="m-cell">
+ <div class="m-val" style="color:${m.status==='up'?'var(--green)':m.status==='dn'?'var(--red)':'var(--sub)'}">${m.actual||m.target}</div>
+ <div class="m-lbl">${m.label}</div>
+ ${m.actual?`<div class="m-target" style="color:var(--dim)">Target: ${m.target}</div>`:`<div class="m-target">Target: ${m.target}</div>`}
+ </div>`).join('');
+ const dotColor=q.status==='past'?'#70d090':q.status==='current'?'var(--lime)':'var(--b3)';
+ return `
+ <div class="q-block ${q.status}${isOpen?' open':''}" id="${q.id}">
+ <div class="q-dot"></div>
+ <div class="q-card">
+ <div class="q-header" onclick="toggleQ('${q.id}')">
+ <div class="q-label">${q.label}</div>
+ <div class="q-tagline">${q.tagline}</div>
+ <div class="q-status-area">
+ ${q.status==='past'?'<span class="pill p-live"> Shipped</span>':q.status==='current'?'<span class="pill p-build">◆ Now</span>':'<span class="pill p-plan">Upcoming</span>'}
+ <span class="q-chevron">▶</span>
+ </div>
+ </div>
+ <div class="q-body">
+ <div class="q-sections">
+ <div>
+ <div class="qs-title">${q.status==='past'?'What shipped':'What ships this quarter'}</div>
+ <ul class="feat-list">
+ ${q.features.map(f=>`<li><div class="feat-dot" style="background:${f.color}"></div><span>${f.text}</span></li>`).join('')}
+ </ul>
+ </div>
+ <div>
+ <div class="qs-title">${q.status==='past'?'Actual results':'Data targets'}</div>
+ <div class="metrics-grid">${metricHtml}</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>`;
+ }).join('');
+}
+function toggleQ(id){
+ const el=document.getElementById(id);
+ el.classList.toggle('open');
+}
+
+// ════════════════════════════════════════════
+// PAGE 2: FEATURE MAP
+// ════════════════════════════════════════════
+let currentMod='voice';
+const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const NOW_M=2; // March
+
+function switchMod(mod,btn){
+ currentMod=mod;
+ document.querySelectorAll('.mod-tab').forEach(t=>t.classList.remove('act'));
+ btn.classList.add('act');
+ renderMod(mod);
+}
+
+function renderMod(mod){
+ const d=MODULES_DATA[mod];
+ // Adopt panel
+ const adp=document.getElementById('adopt-panel');
+ adp.innerHTML=`
+ <div class="card adopt-hdr">
+ <div style="font-size:22px;margin-bottom:8px">${d.icon}</div>
+ <div style="font-size:12px;color:var(--sub);margin-bottom:4px">${d.name}</div>
+ <div class="adopt-num" style="color:${d.color}">${d.adoption}%</div>
+ <div class="adopt-sub">${d.clinics} of ${d.total} clinics active</div>
+ <div class="adopt-bar-bg"><div class="adopt-bar" style="width:${d.adoption}%;background:${d.color}"></div></div>
+ <div class="adopt-mini-stats">
+ <div class="ams"><div class="ams-v" style="color:${d.color}">${d.clinics}</div><div class="ams-l">Active clinics</div></div>
+ <div class="ams"><div class="ams-v" style="color:var(--red)">${d.churn}</div><div class="ams-l">Churned clinics</div></div>
+ </div>
+ </div>`;
+
+ // Version gantt
+ const cols=12;
+ const colW=100/(cols+1);
+ const gridCols=`120px repeat(${cols},1fr)`;
+ let gHtml=`<div class="ver-gantt">
+ <div class="ver-header" style="display:grid;grid-template-columns:${gridCols}">
+ <div class="ver-hcell" style="text-align:left">Feature</div>
+ ${MONTHS_SHORT.map((m,i)=>`<div class="ver-hcell${i===NOW_M?' now-col':''}"${i===NOW_M?' style="color:var(--lime)"':''}>${i===NOW_M?'◆ ':''} ${m}</div>`).join('')}
+ </div>`;
+ d.versions.forEach((v,vi)=>{
+ const typeClass={live:'vb-live',beta:'vb-beta',build:'vb-build',plan:'vb-plan'}[v.type]||'vb-plan';
+ const span=v.e-v.s+1;
+ gHtml+=`<div class="ver-row" style="display:grid;grid-template-columns:${gridCols}">
+ <div class="ver-label" style="font-size:10px;color:${d.color}">${v.label}</div>
+ ${MONTHS_SHORT.map((_,i)=>{
+ const inRange=i>=v.s&&i<=v.e;
+ if(i===v.s){
+ const w=`calc(${span*100}% - 8px)`;
+ return `<div class="ver-cell${i===NOW_M?' now-col':''}">
+ <div class="ver-bar ${typeClass}" style="left:4px;width:${w};z-index:2"
+ onmouseenter="showTip(event,'${v.title.replace(/'/g,"\\'")}',${JSON.stringify(v.items).replace(/"/g,'&quot;')})"
+ onmouseleave="hideTip()">${v.label}</div>
+ </div>`;
+ }
+ if(inRange) return `<div class="ver-cell${i===NOW_M?' now-col':''}"></div>`;
+ return `<div class="ver-cell${i===NOW_M?' now-col':''}"></div>`;
+ }).join('')}
+ </div>`;
+ });
+ gHtml+='</div>';
+ document.getElementById('ver-wrap').innerHTML=gHtml;
+
+ // Issues
+ const issues=d.issues;
+ document.getElementById('issue-count').textContent=`${issues.length} open`;
+ const prioClass={Critical:'p-crit',High:'p-high',Medium:'p-med',Low:'p-low'};
+ const statusColor={
+ 'In progress':'var(--blue)','Investigating':'var(--orange)',
+ 'Urgent — legal':'var(--red)','Scheduled':'var(--sub)',
+ 'Backlog':'var(--dim)','Beta fix':'var(--blue)','In v2.0':'var(--green)'
+ };
+ document.getElementById('issue-list').innerHTML=issues.sort((a,b)=>{
+ const pm={Critical:0,High:1,Medium:2,Low:3};
+ return (pm[a.prio]||3)-(pm[b.prio]||3);
+ }).map(iss=>`
+ <div class="issue-row">
+ <div><div class="i-title">${iss.title}</div><div class="i-sub">${iss.sub}</div></div>
+ <div><span class="pill ${prioClass[iss.prio]||'p-low'}">${iss.prio}</span></div>
+ <div><span style="font-size:11px;font-family:var(--f-mono);color:var(--orange)">${iss.clinics} clinics</span></div>
+ <div><span class="i-mono">${iss.ver}</span></div>
+ <div><span class="i-mono">${iss.owner}</span></div>
+ <div><span style="font-size:10px;font-family:var(--f-mono);color:${statusColor[iss.status]||'var(--sub)'}">${iss.status}</span></div>
+ </div>`).join('');
+}
+
+function showTip(e, title, items){
+ const tip=document.getElementById('vtip');
+ tip.innerHTML=`<div class="vtip-ver">${title}</div>${items.map(i=>`<div class="vtip-item">${i}</div>`).join('')}`;
+ tip.style.display='block';
+ moveTip(e);
+}
+function moveTip(e){
+ const tip=document.getElementById('vtip');
+ tip.style.left=(e.clientX+14)+'px';
+ tip.style.top=(e.clientY-10)+'px';
+}
+function hideTip(){document.getElementById('vtip').style.display='none';}
+document.addEventListener('mousemove',e=>{if(document.getElementById('vtip').style.display!=='none')moveTip(e);});
+
+// ════════════════════════════════════════════
+// PAGE 3: BACKLOG
+// ════════════════════════════════════════════
+let blData=[...BACKLOG_DATA];
+
+function prioOrder(p){return{Critical:0,High:1,Medium:2,Low:3}[p]??4;}
+function impactColor(v){return v>=80?'var(--red)':v>=60?'var(--orange)':v>=40?'var(--yellow)':'var(--sub)';}
+const pillMap={Critical:'p-crit',High:'p-high',Medium:'p-med',Low:'p-low'};
+const statusColorMap={
+ 'In progress':'var(--blue)','Investigating':'var(--orange)',
+ 'Hotfix pending':'var(--red)','In v2.0':'var(--green)',
+ 'Scheduled':'var(--sub)','Backlog':'var(--dim)',
+ 'Urgent — legal':'var(--red)','Beta fix':'var(--blue)'
+};
+
+function filterBacklog(){
+ const q=document.getElementById('bl-search').value.toLowerCase();
+ const mod=document.getElementById('bl-mod').value;
+ const src=document.getElementById('bl-src').value;
+ const prio=document.getElementById('bl-prio').value;
+ const sort=document.getElementById('bl-sort').value;
+ let list=blData.filter(r=>{
+ const matchQ=!q||r.title.toLowerCase().includes(q)||r.problem.toLowerCase().includes(q)||r.owner.toLowerCase().includes(q);
+ const matchM=!mod||r.module===mod;
+ const matchS=!src||r.source===src;
+ const matchP=!prio||r.prio===prio;
+ return matchQ&&matchM&&matchS&&matchP;
+ });
+ if(sort==='impact') list.sort((a,b)=>b.impact-a.impact);
+ else if(sort==='prio') list.sort((a,b)=>prioOrder(a.prio)-prioOrder(b.prio));
+ else list.sort((a,b)=>b.date.localeCompare(a.date));
+ renderBacklog(list);
+}
+
+function renderBacklog(list){
+ document.getElementById('bl-rows').innerHTML=list.map(r=>`
+ <div class="bl-row${r._new?' new-row':''}">
+ <div><div class="bl-title">${r.title}</div><div class="bl-sub">${r.problem}</div></div>
+ <div><span class="pill p-plan" style="font-size:9px">${r.module}</span></div>
+ <div><span class="pill ${pillMap[r.prio]||'p-low'}">${r.prio}</span></div>
+ <div class="imp-wrap">
+ <div class="imp-bar-bg"><div class="imp-bar" style="width:${r.impact}%;background:${impactColor(r.impact)}"></div></div>
+ <span style="font-size:10px;font-family:var(--f-mono);min-width:26px;color:${impactColor(r.impact)}">${r.impact}</span>
+ </div>
+ <div><div class="bl-mono">${r.source}</div><div class="bl-mono" style="color:var(--dim)">${r.clinics} clinics</div></div>
+ <div class="bl-mono">${r.owner}</div>
+ <div class="bl-mono">${r.ver}</div>
+ <div><span style="font-size:10px;font-family:var(--f-mono);color:${statusColorMap[r.status]||'var(--sub)'}">${r.status}</span></div>
+ </div>`).join('');
+}
+
+function openModal(){document.getElementById('modal-bg').classList.add('vis');}
+function closeModal(){document.getElementById('modal-bg').classList.remove('vis');}
+
+function saveTicket(){
+ const title=document.getElementById('f-title').value.trim();
+ if(!title){alert('Title is required');return;}
+ const clinics=parseInt(document.getElementById('f-clinics').value)||0;
+ const prio=document.getElementById('f-prio').value;
+ const impact=prio==='Critical'?85:prio==='High'?60:prio==='Medium'?35:15;
+ const newTicket={
+ id:'T-'+(blData.length+1).toString().padStart(3,'0'),
+ title,
+ problem:document.getElementById('f-problem').value||'—',
+ module:document.getElementById('f-mod').value,
+ prio,
+ impact:Math.min(99,impact+(clinics>20?15:clinics>10?8:0)),
+ clinics,
+ source:document.getElementById('f-src').value,
+ owner:document.getElementById('f-owner').value||'@unassigned',
+ ver:document.getElementById('f-ver').value||'TBD',
+ status:'New',
+ date:new Date().toISOString().slice(0,10),
+ _new:true,
+ };
+ blData.unshift(newTicket);
+ closeModal();
+ filterBacklog();
+ // clear form
+ ['f-title','f-problem','f-clinics','f-owner','f-ver'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════
+function nav(tab,btn){
+ document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
+ document.querySelectorAll('.nb').forEach(b=>b.classList.remove('act'));
+ document.getElementById('pg-'+tab).classList.add('act');
+ btn.classList.add('act');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+window.addEventListener('load',()=>{
+ buildTimeline();
+ renderMod('voice');
+ filterBacklog();
+});
+</script>
+</body>
+</html>
